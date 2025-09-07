@@ -1,0 +1,22 @@
+name: buy_it
+description: A starter for the Shoppe eCommerce UI
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: '>=2.18.0 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  google_fonts: ^4.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# flutter:
+#   uses-material-design: true
+#   assets:
+#     - assets/images/

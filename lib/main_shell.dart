@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'screens/shop_screen.dart';
-import 'screens/categories_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/gallery_screen.dart';
+import 'screens/cart_screen.dart'; // new
 
 class MainShell extends StatefulWidget {
   @override
@@ -17,7 +17,7 @@ class _MainShellState extends State<MainShell> {
     ShopScreen(),        // Home
     DashboardScreen(),   // Analytics
     GalleryScreen(),     // Gallery
-    CategoriesScreen(),  // Categories
+    CartScreen(),        // 🛒 Cart replaces Categories
     ProfileScreen(),     // Profile
   ];
 
@@ -33,7 +33,7 @@ class _MainShellState extends State<MainShell> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: "Analytics"),
           BottomNavigationBarItem(icon: Icon(Icons.photo), label: "Gallery"),
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: "Categories"),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: "Cart"), // 🔄 changed
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'categories_screen.dart';
 
 class ShopScreen extends StatelessWidget {
   final List<Map<String, String>> categories = [
@@ -43,10 +44,16 @@ class ShopScreen extends StatelessWidget {
               children: [
                 const Text("Categories", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 TextButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => CategoriesScreen()), // go to full categories
+                    );
+                  },
                   icon: const Icon(Icons.arrow_forward, size: 16),
                   label: const Text("See All"),
-                )
+                ),
+
               ],
             ),
             SizedBox(

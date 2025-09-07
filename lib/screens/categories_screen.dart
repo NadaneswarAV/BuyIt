@@ -2,53 +2,60 @@ import 'package:flutter/material.dart';
 
 class CategoriesScreen extends StatelessWidget {
   final List<Map<String, String>> categories = [
-    {"image": "assets/images/dress1.png", "label": "Dresses"},
-    {"image": "assets/images/dress2.png", "label": "Tops"},
-    {"image": "assets/images/watch.png", "label": "Accessories"},
-    {"image": "assets/images/bag.png", "label": "Bags"},
+    {"icon": "🚗", "label": "Cars"},
+    {"icon": "🏢", "label": "Real Estate"},
+    {"icon": "👕", "label": "Clothes"},
+    {"icon": "🏃", "label": "Sports"},
+    {"icon": "🎨", "label": "Art"},
+    {"icon": "📱", "label": "Electronics"},
+    {"icon": "🍔", "label": "Food"},
+    {"icon": "🎮", "label": "Games"},
+    {"icon": "📚", "label": "Books"},
+    {"icon": "🐶", "label": "Pets"},
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Categories")),
-      body: Column(
-        children: [
-          ToggleButtons(
-            isSelected: const [true, false, false],
-            children: const [
-              Padding(padding: EdgeInsets.all(8), child: Text("All")),
-              Padding(padding: EdgeInsets.all(8), child: Text("Female")),
-              Padding(padding: EdgeInsets.all(8), child: Text("Male")),
-            ],
-            onPressed: (index) {},
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 0.8,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+      appBar: AppBar(
+        title: const Text("All Categories"),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              // Later: go to filtered product list page
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Tapped ${categories[index]['label']}")),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.pink[50],
+                borderRadius: BorderRadius.circular(12),
               ),
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 35,
-                      backgroundImage: AssetImage(categories[index]["image"]!),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(categories[index]["label"]!),
-                  ],
-                );
-              },
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(categories[index]["icon"]!, style: const TextStyle(fontSize: 28)),
+                  const SizedBox(height: 8),
+                  Text(categories[index]["label"]!,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                ],
+              ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

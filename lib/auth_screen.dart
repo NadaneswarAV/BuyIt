@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'main_shell.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -10,6 +12,8 @@ class _AuthScreenState extends State<AuthScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -17,6 +21,10 @@ class _AuthScreenState extends State<AuthScreen>
 
   String _selectedCountry = "🇬🇧 +44";
   final List<String> countries = ["🇬🇧 +44", "🇺🇸 +1", "🇮🇳 +91", "🇦🇺 +61"];
+
+  // Example endpoints
+  final String loginUrl = "https://webhook.site/8288d55b-8055-423d-bde5-a3b02b6bfd9f";
+  final String registerUrl = "https://webhook.site/8288d55b-8055-423d-bde5-a3b02b6bfd9f";
 
   @override
   void initState() {
@@ -38,6 +46,71 @@ class _AuthScreenState extends State<AuthScreen>
       context,
       MaterialPageRoute(builder: (_) => MainShell()),
     );
+  }
+
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final response = await http.post(
+        Uri.parse(loginUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': emailController.text,
+          'password': passwordController.text,
+        }),
+      );
+      if (response.statusCode == 200) {
+        _goToMain();
+      } else {
+        setState(() {
+          _errorMessage = "Login failed: ${jsonDecode(response.body)['message'] ?? 'Unknown error'}";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Login error: $e";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _register() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final response = await http.post(
+        Uri.parse(registerUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': emailController.text,
+          'password': passwordController.text,
+          'phone': '$_selectedCountry ${phoneController.text}',
+        }),
+      );
+      if (response.statusCode == 200) {
+        _goToMain();
+      } else {
+        setState(() {
+          _errorMessage = "Registration failed: ${jsonDecode(response.body)['message'] ?? 'Unknown error'}";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Registration error: $e";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -130,7 +203,7 @@ class _AuthScreenState extends State<AuthScreen>
                                   borderRadius: BorderRadius.circular(30)),
                               backgroundColor: Colors.blue,
                             ),
-                            onPressed: _goToMain,
+                            onPressed: _login,
                             child: Text("Login"),
                           ),
                         ),
@@ -233,7 +306,7 @@ class _AuthScreenState extends State<AuthScreen>
                                   borderRadius: BorderRadius.circular(30)),
                               backgroundColor: Colors.blue,
                             ),
-                            onPressed: _goToMain,
+                            onPressed: _register,
                             child: Text("Done"),
                           ),
                         ),

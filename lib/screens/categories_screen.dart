@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/bottom_navbar.dart';
 import 'fresh_market_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -11,11 +10,6 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  int _selectedIndex = 1; // 1 = Categories tab
-
-  void _onBottomNavTap(int index) {
-    setState(() => _selectedIndex = index);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,8 +133,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ],
         ),
       ),
-
-
     );
   }
 
@@ -168,7 +160,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   Widget _buildCategoryCard(String imagePath, String title) {
     return Container(
-      width: 90,
+      width: 100,
+      height: 100,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -179,13 +172,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         ],
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(imagePath, height: 50, fit: BoxFit.contain),
-          const SizedBox(height: 8),
+          Image.asset(imagePath, height: 40, width: 40, fit: BoxFit.contain),
+          const SizedBox(height: 6),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 11),
+            style: GoogleFonts.poppins(fontSize: 10),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

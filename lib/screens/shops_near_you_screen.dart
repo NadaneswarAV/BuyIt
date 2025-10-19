@@ -12,7 +12,13 @@ class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
   String selectedCategory = 'Grocery';
   String searchQuery = '';
   bool sortByRating = true;
-  int selectedIndex = 0; // Shops near you is not in bottom nav, but we can set to 0 for home
+  int _selectedIndex = 0; // Shops near you is not in bottom nav, but we can set to 0 for home
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   final List<String> categories = [
     'Grocery',
@@ -121,14 +127,8 @@ class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: selectedIndex,
-        onTap: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
-      ),
+
+      bottomNavigationBar: BottomNavBar(currentIndex: _selectedIndex, onTap: _onItemTapped),
     );
   }
 

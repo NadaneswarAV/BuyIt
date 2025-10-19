@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navbar.dart';
+import '../screens/cart_screen.dart';
 
 class FavouritesScreen extends StatefulWidget {
   const FavouritesScreen({super.key});
@@ -11,7 +12,7 @@ class FavouritesScreen extends StatefulWidget {
 class _FavouritesScreenState extends State<FavouritesScreen> {
   int _selectedIndex = 2; // 2 = Favourites tab
 
-  void _onBottomNavTap(int index) {
+  void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
 
@@ -78,6 +79,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
           onPressed: () {},
         ),
       ),
+      backgroundColor: Colors.white,
       body:
           favourites.isEmpty
               ? const Center(
@@ -90,34 +92,64 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                   ),
                 ),
               )
-              : SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    ...favourites.map(
-                      (item) => FavouriteCard(
-                        data: item,
-                        onLikeToggle: () => _toggleLike(item),
-                        onIncrement: () {
-                          setState(() {
-                            item['quantity']++;
-                          });
-                        },
-                        onDecrement: () {
-                          setState(() {
-                            if (item['quantity'] > 1) item['quantity']--;
-                          });
-                        },
+              : Stack(
+                children: [
+                  SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 8),
+                        ...favourites.map(
+                          (item) => FavouriteCard(
+                            data: item,
+                            onLikeToggle: () => _toggleLike(item),
+                            onIncrement: () {
+                              setState(() {
+                                item['quantity']++;
+                              });
+                            },
+                            onDecrement: () {
+                              setState(() {
+                                if (item['quantity'] > 1) item['quantity']--;
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 100), // Space for the button
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 20,
+                    left: 16,
+                    right: 16,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const CartScreen()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        "Go to Cart",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 80),
-                  ],
-                ),
+                  ),
+                ],
               ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onBottomNavTap,
-      ),
+
+
     );
   }
 }

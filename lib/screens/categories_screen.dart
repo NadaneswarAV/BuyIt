@@ -139,10 +139,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onBottomNavTap,
-      ),
+
+
     );
   }
 

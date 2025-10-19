@@ -351,6 +351,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
 
+      backgroundColor: Colors.white,
+
       // Scrollable body
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -471,14 +473,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-      ),
+
+
     );
   }
 

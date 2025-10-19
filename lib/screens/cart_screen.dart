@@ -316,6 +316,12 @@ class _CartScreenState extends State<CartScreen> {
 
   double get totalCharge => itemsTotal + deliveryFee;
 
+  void _onItemTapped(int index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -342,14 +348,8 @@ class _CartScreenState extends State<CartScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: selectedIndex,
-        onTap: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
-      ),
+
+
     );
   }
 
@@ -558,12 +558,5 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildBottomBar() {
-    return BottomNavBar(
-      currentIndex: 3,
-      onTap: (index) {
-        // Navigation handled by MainNavigation
-      },
-    );
-  }
+
 }

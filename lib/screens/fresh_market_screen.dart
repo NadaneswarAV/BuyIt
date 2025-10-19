@@ -16,7 +16,7 @@ class _FreshMarketScreenState extends State<FreshMarketScreen> {
   String _selectedFilter = "All";
   bool _filterSet = false;
 
-  void _onBottomNavTap(int index) {
+  void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
 
@@ -34,10 +34,7 @@ class _FreshMarketScreenState extends State<FreshMarketScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onBottomNavTap,
-      ),
+
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
@@ -153,6 +150,8 @@ class _FreshMarketScreenState extends State<FreshMarketScreen> {
           ),
         ),
       ),
+
+      bottomNavigationBar: BottomNavBar(currentIndex: _selectedIndex, onTap: _onItemTapped),
     );
   }
 

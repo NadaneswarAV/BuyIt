@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../widgets/bottom_navbar.dart';
 import '../screens/cart_screen.dart';
+import 'main_navigation.dart';
 
 class FavouritesScreen extends StatefulWidget {
   const FavouritesScreen({super.key});
@@ -76,7 +76,9 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
         elevation: 1,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {},
+          onPressed: () {
+            (MainNavigation.instance ?? MainNavigation.mainKey.currentState)?.goToPreviousTab();
+          },
         ),
       ),
       backgroundColor: Colors.white,
@@ -124,10 +126,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                     right: 16,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const CartScreen()),
-                        );
+                        (MainNavigation.instance ?? MainNavigation.mainKey.currentState)?.setIndex(3);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,

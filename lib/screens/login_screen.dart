@@ -27,9 +27,12 @@ class LoginScreen extends StatelessWidget {
                     alignment: Alignment.topRight,
                     child: TextButton(
                       onPressed: () {
-                        Navigator.pushReplacement(
+                        Navigator.pushAndRemoveUntil(
                           context,
-                          MaterialPageRoute(builder: (_) => const MainNavigation()),
+                          MaterialPageRoute(
+                            builder: (_) => MainNavigation(key: MainNavigation.mainKey),
+                          ),
+                          (route) => false,
                         );
                       },
                       child: const Text("Skip >", style: TextStyle(color: Colors.white)),
@@ -68,9 +71,12 @@ class LoginScreen extends StatelessWidget {
                   RoundedButton(
                     text: "DONE",
                     onPressed: () {
-                      Navigator.pushReplacement(
+                      Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (_) => const MainNavigation()),
+                        MaterialPageRoute(
+                          builder: (_) => MainNavigation(key: MainNavigation.mainKey),
+                        ),
+                        (route) => false,
                       );
                     },
                   ),

@@ -274,7 +274,7 @@
 // }
 
 import 'package:flutter/material.dart';
-import '../widgets/bottom_navbar.dart';
+import 'main_navigation.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -331,8 +331,14 @@ class _CartScreenState extends State<CartScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () async {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).maybePop();
+              return;
+            }
+            (MainNavigation.instance ?? MainNavigation.mainKey.currentState)?.goToPreviousTab();
+          },
         ),
       ),
       body: SingleChildScrollView(

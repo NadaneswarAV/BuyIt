@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ionicons/ionicons.dart';
-import '../widgets/bottom_navbar.dart';
+import 'main_navigation.dart';
 
 class FreshMarketScreen extends StatefulWidget {
   final String? initialFilter;
@@ -12,13 +12,11 @@ class FreshMarketScreen extends StatefulWidget {
 }
 
 class _FreshMarketScreenState extends State<FreshMarketScreen> {
-  int _selectedIndex = 0; // Default to home, but can be adjusted
+  // This screen does not own bottom navigation; `MainNavigation` does.
   String _selectedFilter = "All";
   bool _filterSet = false;
 
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-  }
+  
 
   @override
   void initState() {
@@ -150,8 +148,6 @@ class _FreshMarketScreenState extends State<FreshMarketScreen> {
           ),
         ),
       ),
-
-      bottomNavigationBar: BottomNavBar(currentIndex: _selectedIndex, onTap: _onItemTapped),
     );
   }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/bottom_navbar.dart';
+import 'main_navigation.dart';
 
 class ShopsNearYouPage extends StatefulWidget {
   const ShopsNearYouPage({super.key});
@@ -12,13 +12,7 @@ class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
   String selectedCategory = 'Grocery';
   String searchQuery = '';
   bool sortByRating = true;
-  int _selectedIndex = 0; // Shops near you is not in bottom nav, but we can set to 0 for home
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  // This screen does not own bottom navigation; `MainNavigation` does.
 
   final List<String> categories = [
     'Grocery',
@@ -70,6 +64,7 @@ class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -127,8 +122,6 @@ class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
           ),
         ],
       ),
-
-      bottomNavigationBar: BottomNavBar(currentIndex: _selectedIndex, onTap: _onItemTapped),
     );
   }
 

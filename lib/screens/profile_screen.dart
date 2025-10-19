@@ -247,6 +247,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/bottom_navbar.dart';
+import 'main_navigation.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -347,7 +348,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            (MainNavigation.instance ?? MainNavigation.mainKey.currentState)?.goToPreviousTab();
+          },
         ),
       ),
 

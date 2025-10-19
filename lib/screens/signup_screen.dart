@@ -27,8 +27,10 @@ class SignupScreen extends StatelessWidget {
                     alignment: Alignment.topRight,
                     child: TextButton(
                       onPressed: () {
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (_) => const LoginScreen()));
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        );
                       },
                       child: const Text("Skip >", style: TextStyle(color: Colors.white)),
                     ),

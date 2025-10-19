@@ -79,12 +79,23 @@ void _showEditProfileDialog() {
           : error != null
               ? Center(child: Text(error!))
               : ListView(
-                  padding: const EdgeInsets.all(16),
                   children: [
-                    ContactInfoCard(
-                      email: profileData?['email'] ?? '',
-                      phone: profileData?['phone'] ?? '',
-                      onEdit: _showEditProfileDialog,
+                    // Profile header/banner
+                    Image.asset(
+                      'assets/figma/Profile.png',
+                      width: double.infinity,
+                      height: 160,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => SizedBox.shrink(),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: ContactInfoCard(
+                        email: profileData?['email'] ?? '',
+                        phone: profileData?['phone'] ?? '',
+                        onEdit: _showEditProfileDialog,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     const Text("Settings", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

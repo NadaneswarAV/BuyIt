@@ -110,7 +110,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     ]),
                     _buildSection("Snacks & Drinks", [
                       _buildCategoryCard("assets/temp/tea.png", "Tea, Coffee & more"),
-                      _buildCategoryCard("assets/temp/icecream.png", "Icecreams & more"),
+                      _buildCategoryCard("assets/temp/icecreams.png", "Icecreams & more"),
                       _buildCategoryCard("assets/temp/frozen.png", "Frozen food"),
                       _buildCategoryCard("assets/temp/sweets.png", "Sweets"),
                     ]),

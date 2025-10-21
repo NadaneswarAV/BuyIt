@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/cart_provider.dart';
 import 'home_screen.dart';
 import 'categories_screen.dart';
 import 'favourites_screen.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
-import 'shops_near_you_screen.dart';
-import 'fresh_market_screen.dart';
-import '../widgets/bottom_navbar.dart';
 
+// A list of keys, one for each tab, to control navigation stacks independently.
+final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+  GlobalKey<NavigatorState>(),
+  GlobalKey<NavigatorState>(),
+  GlobalKey<NavigatorState>(),
+  GlobalKey<NavigatorState>(),
+  GlobalKey<NavigatorState>(),
+];
 class MainNavigation extends StatefulWidget {
   static final GlobalKey<_MainNavigationState> mainKey = GlobalKey<_MainNavigationState>();
   // Track tab history globally as a fallback when the key is unavailable
@@ -24,10 +31,8 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   late int _selectedIndex;
-  int _previousIndex = 0;
-  final List<int> _tabHistory = <int>[];
-
-  final GlobalKey<NavigatorState> _homeTabKey = GlobalKey<NavigatorState>();
+  late int _previousIndex;
+  final List<int> _tabHistory = [];
 
   @override
   void initState() {
@@ -36,19 +41,25 @@ class _MainNavigationState extends State<MainNavigation> {
     _tabHistory.clear();
     _tabHistory.add(_selectedIndex);
     MainNavigation.instance = this;
+    _previousIndex = _selectedIndex;
   }
 
   void _onItemTapped(int index) {
-    if (index == _selectedIndex) return;
+    // If the user is re-selecting the same tab, pop to the first route in that tab's navigator.
+    if (index == _selectedIndex) {
+      _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+      return;
+    }
+
     setState(() {
-      _previousIndex = _selectedIndex;
+      int previousIndex = _selectedIndex;
       _selectedIndex = index;
       // push to history if different from last to avoid loops
       if (_tabHistory.isEmpty || _tabHistory.last != index) {
         _tabHistory.add(index);
       }
       // update global fallbacks
-      MainNavigation.previousTabIndex = _previousIndex;
+      MainNavigation.previousTabIndex = previousIndex;
       MainNavigation.currentTabIndex = _selectedIndex;
     });
   }
@@ -64,7 +75,7 @@ class _MainNavigationState extends State<MainNavigation> {
       // pop current
       _tabHistory.removeLast();
       final int target = _tabHistory.last;
-      setState(() {
+      setState(() { // Use setState to trigger a rebuild
         _previousIndex = _selectedIndex;
         _selectedIndex = target;
         MainNavigation.previousTabIndex = _previousIndex;
@@ -75,46 +86,72 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          // Home tab with nested navigator to preserve bottom nav on subpages
-          _HomeTabNavigator(navigatorKey: _homeTabKey),
-          const CategoriesScreen(),
-          const FavouritesScreen(),
-          const CartScreen(),
-          const ProfileScreen(),
-        ],
+    return WillPopScope(
+      onWillPop: () async {
+        // Check if the current tab's navigator can pop.
+        final canPop = await _navigatorKeys[_selectedIndex].currentState?.maybePop() ?? false;
+        if (!canPop) {
+          // If it can't pop, try to go to the previous tab.
+          if (_tabHistory.length > 1) {
+            goToPreviousTab();
+            return false; // Prevent app from closing.
+          }
+        }
+        return !canPop; // Allow app to close if there's nothing to pop.
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: <Widget>[
+            _buildOffstageNavigator(0, const HomeScreen()),
+            _buildOffstageNavigator(1, const CategoriesScreen()),
+            _buildOffstageNavigator(2, const FavouritesScreen()),
+            _buildOffstageNavigator(3, const CartScreen()),
+            _buildOffstageNavigator(4, const ProfileScreen()),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: Colors.green,
+          unselectedItemColor: Colors.grey,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          items: [
+            const BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
+            const BottomNavigationBarItem(icon: Icon(Icons.grid_view_outlined), activeIcon: Icon(Icons.grid_view_rounded), label: 'Categories'),
+            const BottomNavigationBarItem(icon: Icon(Icons.favorite_border), activeIcon: Icon(Icons.favorite), label: 'Favorites'),
+            BottomNavigationBarItem(
+              icon: Consumer<CartProvider>(
+                builder: (_, cart, child) => Badge(
+                  label: Text(cart.itemCount.toString()),
+                  isLabelVisible: cart.itemCount > 0,
+                  child: child,
+                ),
+                child: const Icon(Icons.shopping_cart_outlined),
+              ),
+              activeIcon: const Icon(Icons.shopping_cart),
+              label: 'Cart',
+            ),
+            const BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
+          ],
+        ),
       ),
-      bottomNavigationBar: BottomNavBar(currentIndex: _selectedIndex, onTap: _onItemTapped),
     );
   }
-}
 
-class _HomeTabNavigator extends StatelessWidget {
-  final GlobalKey<NavigatorState> navigatorKey;
-  const _HomeTabNavigator({required this.navigatorKey});
-
-  @override
-  Widget build(BuildContext context) {
-    return Navigator(
-      key: navigatorKey,
-      onGenerateRoute: (RouteSettings settings) {
-        Widget page;
-        switch (settings.name) {
-          case '/shopsNearYou':
-            page = const ShopsNearYouPage();
-            break;
-          case '/freshMarket':
-            page = const FreshMarketScreen();
-            break;
-          case '/':
-          default:
-            page = const HomeScreen();
-        }
-        return MaterialPageRoute(builder: (_) => page, settings: settings);
-      },
+  Widget _buildOffstageNavigator(int index, Widget initialRoute) {
+    return Offstage(
+      offstage: _selectedIndex != index,
+      child: Navigator(
+        key: _navigatorKeys[index],
+        onGenerateRoute: (routeSettings) {
+          return MaterialPageRoute(
+            builder: (context) => initialRoute,
+          );
+        },
+      ),
     );
   }
 }

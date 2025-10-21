@@ -18,6 +18,7 @@ class BottomNavBar extends StatefulWidget {
 
 class _BottomNavBarState extends State<BottomNavBar> {
   void _handleTap(int index) {
+    // The logic to pop to the root of the tab is now handled in MainNavigation itself.
     widget.onTap(index);
   }
 

@@ -3,8 +3,8 @@ import '../widgets/rounded_button.dart';
 import 'signup_screen.dart';
 import 'login_screen.dart';
 
-class Onboarding1 extends StatelessWidget {
-  const Onboarding1({super.key});
+class Onboarding extends StatelessWidget {
+  const Onboarding({super.key});
 
   @override
   Widget build(BuildContext context) {

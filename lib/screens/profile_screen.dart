@@ -16,6 +16,8 @@
 //     });
 //   }
 
+ 
+
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
@@ -246,7 +248,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../widgets/bottom_navbar.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import '../services/storage_service.dart';
 import 'main_navigation.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -257,8 +261,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  int _selectedIndex = 4;
-
   // Controllers
   final TextEditingController _nameController = TextEditingController(
     text: "Sarah Johnson",
@@ -282,10 +284,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     text: "10001",
   );
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  String? _profileImagePath;
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvatar();
+  }
+
+  Future<void> _loadAvatar() async {
+    final path = await StorageService.getString(StorageKeys.profileImagePath);
+    if (!mounted) return;
+    setState(() => _profileImagePath = path);
+  }
+
+  Future<void> _pickImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(leading: const Icon(Icons.photo_library), title: const Text('Gallery'), onTap: () => Navigator.pop(ctx, ImageSource.gallery)),
+            ListTile(leading: const Icon(Icons.photo_camera), title: const Text('Camera'), onTap: () => Navigator.pop(ctx, ImageSource.camera)),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    final picked = await _picker.pickImage(source: source, maxWidth: 1024, imageQuality: 85);
+    if (picked != null) {
+      await StorageService.setString(StorageKeys.profileImagePath, picked.path);
+      if (!mounted) return;
+      setState(() => _profileImagePath = picked.path);
+    }
   }
 
   // Date Picker
@@ -323,6 +356,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (response.statusCode == 201) {
+      final savedAddress = [
+        _streetController.text.trim(),
+        _cityController.text.trim(),
+        _zipController.text.trim(),
+      ].where((e) => e.isNotEmpty).join(', ');
+      if (savedAddress.isNotEmpty) {
+        await StorageService.setString(StorageKeys.savedLocation, savedAddress);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Profile updated successfully!")),
       );
@@ -368,9 +409,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Stack(
               alignment: Alignment.bottomRight,
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 50,
-                  backgroundImage: AssetImage('assets/temp/profile.jpg'),
+                  backgroundImage: _profileImagePath != null
+                      ? FileImage(File(_profileImagePath!))
+                      : const AssetImage('assets/temp/profile.jpg') as ImageProvider,
                 ),
                 Container(
                   decoration: const BoxDecoration(
@@ -383,7 +426,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: Colors.white,
                       size: 20,
                     ),
-                    onPressed: () {},
+                    onPressed: _pickImage,
                   ),
                 ),
               ],

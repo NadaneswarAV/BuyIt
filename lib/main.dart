@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/onboarding1.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'providers/cart_provider.dart';
+import 'screens/main_navigation.dart';
+import 'screens/onboarding.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Check login status
+  final prefs = await SharedPreferences.getInstance();
+  final bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
   // Request edge-to-edge mode so the app can draw behind system bars
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   // Set transparent system bars so background is visible behind them
@@ -14,54 +23,50 @@ void main() {
     systemNavigationBarIconBrightness: Brightness.light,
   ));
 
-  runApp(const BuyitApp());
+  runApp(BuyitApp(isLoggedIn: isLoggedIn));
 }
  
 class BuyitApp extends StatelessWidget {
-  const BuyitApp({super.key});
+  final bool isLoggedIn;
+  const BuyitApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // full-screen background: place a green color behind the image so
-          // any transparent/rounded areas in the image don't show black.
-          Positioned.fill(
-            child: Container(color: Colors.green.shade700),
-          ),
-          // Positioned.fill(
-          //   child: Image.asset(
-          //     'assets/images/Onboarding2.png',
-          //     fit: BoxFit.cover,
-          //     width: double.infinity,
-          //     height: double.infinity,
-          //   ),
-          // ),
-          // subtle overlay for contrast
-          Positioned.fill(child: Container(color: Colors.black.withOpacity(0.25))),
-          // The app UI sits on top; scaffolds are transparent to let the
-          // background show through.
-          Positioned.fill(
-            child: MaterialApp(
-              title: 'Buyit',
-              debugShowCheckedModeBanner: false,
-              theme: ThemeData(
-                primaryColor: const Color(0xFF1B1C4A),
-                scaffoldBackgroundColor: Colors.transparent,
-                appBarTheme: const AppBarTheme(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  systemOverlayStyle: SystemUiOverlayStyle(statusBarColor: Colors.transparent),
-                ),
-                fontFamily: 'Poppins',
-              ),
-              home: const Onboarding1(),
+    return ChangeNotifierProvider(
+      create: (ctx) => CartProvider(),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // full-screen background: place a green color behind the image so
+            // any transparent/rounded areas in the image don't show black.
+            Positioned.fill(
+              child: Container(color: Colors.green.shade700),
             ),
-          ),
-        ],
+            // subtle overlay for contrast
+            Positioned.fill(child: Container(color: Colors.black.withOpacity(0.25))),
+            // The app UI sits on top; scaffolds are transparent to let the
+            // background show through.
+            Positioned.fill(
+              child: MaterialApp(
+                title: 'Buyit',
+                debugShowCheckedModeBanner: false,
+                theme: ThemeData(
+                  primaryColor: const Color(0xFF1B1C4A),
+                  scaffoldBackgroundColor: Colors.transparent,
+                  appBarTheme: const AppBarTheme(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    systemOverlayStyle: SystemUiOverlayStyle(statusBarColor: Colors.transparent),
+                  ),
+                  fontFamily: 'Poppins',
+                ), 
+                home: isLoggedIn ? MainNavigation(key: MainNavigation.mainKey) : const Onboarding(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

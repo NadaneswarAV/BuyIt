@@ -1,0 +1,157 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../models/product.dart';
+import '../providers/cart_provider.dart';
+import '../services/favourites_service.dart';
+
+class ProductDetailScreen extends StatefulWidget {
+  final Product product;
+
+  const ProductDetailScreen({super.key, required this.product});
+
+  @override
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  bool _isFavourited = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavState();
+  }
+
+  Future<void> _loadFavState() async {
+    final fav = await FavouritesService.isItemFavouritedByProduct(widget.product.name);
+    if (!mounted) return;
+    setState(() => _isFavourited = fav);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context, listen: false);
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 300.0,
+            pinned: true,
+            backgroundColor: Colors.white,
+            actions: [
+              IconButton(
+                tooltip: _isFavourited ? 'Remove from favourites' : 'Add to favourites',
+                icon: Icon(_isFavourited ? Icons.favorite : Icons.favorite_border, color: Colors.redAccent),
+                onPressed: () async {
+                  if (_isFavourited) {
+                    await FavouritesService.removeItemByProduct(widget.product.name);
+                    if (!mounted) return;
+                    setState(() => _isFavourited = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Item removed from favourites')),
+                    );
+                  } else {
+                    await FavouritesService.addItem(
+                      product: widget.product.name,
+                      price: widget.product.price,
+                      unit: widget.product.unit,
+                      rating: widget.product.rating,
+                      subtitle: widget.product.description,
+                    );
+                    if (!mounted) return;
+                    setState(() => _isFavourited = true);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Item added to favourites')),
+                    );
+                  }
+                },
+              )
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Hero(
+                tag: 'product_${widget.product.id}',
+                child: Image.asset(
+                  widget.product.image,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.product.name,
+                    style: GoogleFonts.poppins(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '₹${widget.product.price.toStringAsFixed(2)} / ${widget.product.unit}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 22,
+                      color: Colors.green,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 20),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${widget.product.rating} Rating',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Category: ${widget.product.category}',
+                        style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Description',
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.product.description,
+                    style: const TextStyle(fontSize: 16, height: 1.5, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ElevatedButton.icon(
+          onPressed: () {
+            cart.addItem(widget.product);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('${widget.product.name} added to cart!'), duration: const Duration(seconds: 1)),
+            );
+          },
+          icon: const Icon(Icons.add_shopping_cart),
+          label: const Text('Add to Cart'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+  }
+}

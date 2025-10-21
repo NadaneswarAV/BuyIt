@@ -11,150 +11,139 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
 
+  final Map<String, List<_SubCat>> _sections = {
+    'Grocery': [
+      _SubCat(parent: 'Grocery', title: 'Fruits & vegetables', filter: 'Fruits', image: 'assets/temp/fruits.png'),
+      _SubCat(parent: 'Grocery', title: 'Diary, Bread & Eggs', filter: 'Dairy', image: 'assets/temp/diary.png'),
+      _SubCat(parent: 'Grocery', title: 'Grains & oil', filter: 'Organic', image: 'assets/temp/grains.png'),
+    ],
+    'Snacks & Drinks': [
+      _SubCat(parent: 'Snacks & Drinks', title: 'Tea, Coffee & more', filter: 'Tea', image: 'assets/temp/tea.png'),
+      _SubCat(parent: 'Snacks & Drinks', title: 'Icecreams & more', filter: 'Icecreams', image: 'assets/temp/icecreams.png'),
+      _SubCat(parent: 'Snacks & Drinks', title: 'Frozen food', filter: 'Frozen', image: 'assets/temp/frozen.png'),
+      _SubCat(parent: 'Snacks & Drinks', title: 'Sweets', filter: 'Sweets', image: 'assets/temp/sweets.png'),
+    ],
+    'Beauty & Personal Care': [
+      _SubCat(parent: 'Beauty & Personal Care', title: 'Beauty Parlour', filter: 'Beauty', image: 'assets/temp/beauty.png'),
+      _SubCat(parent: 'Beauty & Personal Care', title: 'Skincare', filter: 'Skincare', image: 'assets/temp/skincare.png'),
+      _SubCat(parent: 'Beauty & Personal Care', title: 'Protein & Nutrition', filter: 'Protein', image: 'assets/temp/whey.png'),
+      _SubCat(parent: 'Beauty & Personal Care', title: 'Baby Care', filter: 'Baby', image: 'assets/temp/baby.png'),
+    ],
+    'Household Essentials': [
+      _SubCat(parent: 'Household Essentials', title: 'Kitchen & Dining', filter: 'Kitchen', image: 'assets/temp/kitchen.png'),
+      _SubCat(parent: 'Household Essentials', title: 'Home Needs', filter: 'Home', image: 'assets/temp/home.png'),
+      _SubCat(parent: 'Household Essentials', title: 'Electronics', filter: 'Electronics', image: 'assets/temp/electronics.png'),
+      _SubCat(parent: 'Household Essentials', title: 'Pet Care', filter: 'Pet', image: 'assets/temp/pet.png'),
+    ],
+  };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Container(
-              color: Colors.green,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
-                    child: const Center(
-                        child: Text(
-                      "R",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.green),
-                    )),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Container(
-                      height: 42,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Container(
+                color: Colors.green,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.sort, color: Colors.grey),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: 'Search',
-                                hintStyle: GoogleFonts.poppins(
-                                  color: Colors.grey,
-                                  fontSize: 14,
+                      child: const Center(child: Text("R", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green))),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        height: 42,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.sort, color: Colors.grey),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  hintText: 'Search',
+                                  hintStyle: GoogleFonts.poppins(color: Colors.grey, fontSize: 14),
+                                  border: InputBorder.none,
                                 ),
-                                border: InputBorder.none,
                               ),
                             ),
-                          ),
-                          const Icon(Icons.search, color: Colors.grey),
-                        ],
+                            const Icon(Icons.search, color: Colors.grey),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Body Scroll
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSection("Grocery & Kitchen", [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const FreshMarketScreen(initialFilter: "Fruits")),
-                          );
-                        },
-                        child: _buildCategoryCard("assets/temp/fruits.png", "Fruits & vegetables"),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const FreshMarketScreen(initialFilter: "Vegetables")),
-                          );
-                        },
-                        child: _buildCategoryCard("assets/temp/diary.png", "Diary, Bread & Eggs"),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const FreshMarketScreen(initialFilter: "Organic")),
-                          );
-                        },
-                        child: _buildCategoryCard("assets/temp/grains.png", "Grains & oil"),
-                      ),
-                    ]),
-                    _buildSection("Snacks & Drinks", [
-                      _buildCategoryCard("assets/temp/tea.png", "Tea, Coffee & more"),
-                      _buildCategoryCard("assets/temp/icecreams.png", "Icecreams & more"),
-                      _buildCategoryCard("assets/temp/frozen.png", "Frozen food"),
-                      _buildCategoryCard("assets/temp/sweets.png", "Sweets"),
-                    ]),
-                    _buildSection("Beauty & Personal Care", [
-                      _buildCategoryCard("assets/temp/beauty.png", "Beauty Parlour"),
-                      _buildCategoryCard("assets/temp/skincare.png", "Skincare"),
-                      _buildCategoryCard("assets/temp/whey.png", "Protein & Nutrition"),
-                      _buildCategoryCard("assets/temp/baby.png", "Baby Care"),
-                    ]),
-                    _buildSection("Household Essentials", [
-                      _buildCategoryCard("assets/temp/kitchen.png", "Kitchen & Dining"),
-                      _buildCategoryCard("assets/temp/home.png", "Home Needs"),
-                      _buildCategoryCard("assets/temp/electronics.png", "Electronics"),
-                      _buildCategoryCard("assets/temp/pet.png", "Pet Care"),
-                    ]),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text("Browse Categories", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
+              ),
+              const SizedBox(height: 10),
+
+              ..._sections.entries.map((entry) => _buildSection(entry.key, entry.value)).toList(),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );
   }
 
-
-
-  Widget _buildSection(String title, List<Widget> categories) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600, fontSize: 16)),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: categories,
+  Widget _buildSection(String title, List<_SubCat> subs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        ),
+        SizedBox(
+          height: 110,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: subs.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final s = subs[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => FreshMarketScreen(
+                        initialFilter: s.filter,
+                        initialIsCategory: false,
+                        initialCategoryTitle: s.parent,
+                      ),
+                    ),
+                  );
+                },
+                child: _buildCategoryCard(s.image, s.title),
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -189,4 +178,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 }
 
-
+class _SubCat {
+  final String parent;
+  final String title;
+  final String filter;
+  final String image;
+  _SubCat({required this.parent, required this.title, required this.filter, required this.image});
+}

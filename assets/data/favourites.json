@@ -1,0 +1,28 @@
+[
+  {
+    "type": "item",
+    "store": "Jeswin’s Mart",
+    "product": "Fresh Apples",
+    "subtitle": "Red Delicious",
+    "price": 3.99,
+    "unit": "kg",
+    "rating": 4.8,
+    "distance": "2.3 km"
+  },
+  {
+    "type": "item",
+    "store": "WeMart",
+    "product": "Fresh Carrot",
+    "subtitle": "Freshly taken",
+    "price": 7.19,
+    "unit": "kg",
+    "rating": 4.8,
+    "distance": "2.3 km"
+  },
+  {
+    "type": "shop",
+    "store": "Green Basket",
+    "rating": 4.7,
+    "distance": "1.8 km"
+  }
+]

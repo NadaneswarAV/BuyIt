@@ -1,315 +1,350 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ionicons/ionicons.dart';
-import 'main_navigation.dart';
+import 'package:provider/provider.dart';
+import '../data/data_provider.dart';
+import '../models/product.dart';
+import '../models/shop.dart';
+import '../providers/cart_provider.dart';
+import '../widgets/product_card.dart';
+import '../widgets/shimmer_loading.dart';
+import 'product_detail_screen.dart';
+import 'shop_detail_screen.dart';
 
 class FreshMarketScreen extends StatefulWidget {
   final String? initialFilter;
-  const FreshMarketScreen({super.key, this.initialFilter});
+  final bool? initialIsCategory; // true if coming from a main category tap
+  final String? initialCategoryTitle; // used for page title when opening via subcategory
+  const FreshMarketScreen({super.key, this.initialFilter, this.initialIsCategory, this.initialCategoryTitle});
 
   @override
   State<FreshMarketScreen> createState() => _FreshMarketScreenState();
 }
 
 class _FreshMarketScreenState extends State<FreshMarketScreen> {
-  // This screen does not own bottom navigation; `MainNavigation` does.
-  String _selectedFilter = "All";
-  bool _filterSet = false;
+  final TextEditingController _searchController = TextEditingController();
+  late Future<List<dynamic>> _dataFuture;
+  List<Product> _allProducts = [];
+  List<Shop> _allShops = [];
+  List<dynamic> _filteredData = [];
+  Map<String, Shop> _shopById = {};
 
-  
+  String _selectedCategory = 'All';
+  String _sortOption = 'Rating';
+  String? _contextCategory; // when coming from a main category
+  String _pageTitle = 'Fresh Market';
+
+  final List<String> _defaultCategories = ['All', 'Fruits', 'Vegetables', 'Organic', 'Dairy'];
+  late List<String> _categories;
 
   @override
   void initState() {
     super.initState();
+    _categories = List.from(_defaultCategories);
     if (widget.initialFilter != null) {
-      _selectedFilter = widget.initialFilter!;
-      _filterSet = true;
+      final isCategory = widget.initialIsCategory == true;
+      if (isCategory) {
+        // Category context: title = category, default to All to show shops
+        _contextCategory = widget.initialFilter;
+        _pageTitle = widget.initialFilter!;
+        _selectedCategory = 'All';
+        // ensure default chips
+      } else {
+        // Subcategory context: select that subcategory
+        _pageTitle = widget.initialCategoryTitle ?? widget.initialFilter!;
+        if (!_categories.contains(widget.initialFilter)) {
+          _categories.insert(1, widget.initialFilter!);
+        }
+        _selectedCategory = widget.initialFilter!;
+      }
+    }
+    _dataFuture = _loadData();
+    _searchController.addListener(_applyFilters);
+  }
+
+  Future<List<dynamic>> _loadData() async {
+    // Fetch both products and shops in parallel
+    final results = await Future.wait([
+      DataProvider().getProducts(),
+      DataProvider().getShops(),
+    ]);
+    _allProducts = results[0] as List<Product>;
+    _allShops = results[1] as List<Shop>;
+    _shopById = {for (final s in _allShops) s.id: s};
+    _applyFilters();
+    return _filteredData;
+  }
+
+  void _applyFilters() {
+    final query = _searchController.text.toLowerCase();
+
+    if (_selectedCategory == 'All') {
+      // Show shops, optionally filter by context category
+      List<Shop> tempShops = _allShops;
+      if (_contextCategory != null) {
+        tempShops = tempShops.where((shop) => shop.categories.contains(_contextCategory)).toList();
+      }
+      if (query.isNotEmpty) {
+        tempShops = tempShops.where((shop) => shop.name.toLowerCase().contains(query)).toList();
+      }
+      _sortShops(tempShops);
+      _filteredData = tempShops;
+    } else {
+      // Show products
+      List<Product> tempProducts = _allProducts.where((p) => p.category == _selectedCategory).toList();
+      if (query.isNotEmpty) {
+        tempProducts = tempProducts.where((p) => p.name.toLowerCase().contains(query)).toList();
+      }
+      // Sort products
+      _sortProducts(tempProducts);
+      _filteredData = tempProducts;
+    }
+
+    setState(() {});
+  }
+
+  void _sortShops(List<Shop> shops) {
+    switch (_sortOption) {
+      case 'Rating':
+        shops.sort((a, b) => b.rating.compareTo(a.rating));
+        break;
+      case 'Distance':
+        shops.sort((a, b) => a.distance.compareTo(b.distance));
+        break;
+      case 'Delivery Time':
+        shops.sort((a, b) => a.time.compareTo(b.time));
+        break;
+    }
+  }
+
+  void _sortProducts(List<Product> products) {
+    switch (_sortOption) {
+      case 'Rating':
+        products.sort((a, b) => b.rating.compareTo(a.rating));
+        break;
+      case 'Price: Low to High':
+        products.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'Price: High to Low':
+        products.sort((a, b) => b.price.compareTo(a.price));
+        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
-
       appBar: AppBar(
-        elevation: 0,
+        title: Text(_pageTitle),
         backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text("Fresh Market",
-            style: GoogleFonts.poppins(
-                color: Colors.black, fontWeight: FontWeight.w600)),
-        centerTitle: true,
-        actions: [
-          IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.search, color: Colors.black)),
-          IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black)),
+        elevation: 1,
+      ),
+      body: Column(
+        children: [
+          _buildSearchBar(),
+          _buildCategorySelector(),
+          _buildFilterAndSortBar(),
+          Expanded(
+            child: FutureBuilder<List<dynamic>>(
+              future: _dataFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting && _filteredData.isEmpty) {
+                  return _selectedCategory == 'All' ? const ShopListShimmer() : const ProductListShimmer();
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+                if (_filteredData.isEmpty) {
+                  return const Center(child: Text("No items found."));
+                }
+                return _selectedCategory == 'All' ? _buildShopList() : _buildProductGrid();
+              },
+            ),
+          ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+
+  Widget _buildSearchBar() => Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: _selectedCategory == 'All' ? 'Search for shops...' : 'Search for products...',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(icon: const Icon(Icons.clear), onPressed: () => _searchController.clear())
+                : null,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(30.0), borderSide: BorderSide.none),
+            filled: true,
+            fillColor: Colors.grey[200],
+            contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          ),
+        ),
+      );
+
+  Widget _buildCategorySelector() => SizedBox(
+        height: 50,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          itemCount: _categories.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            final cat = _categories[index];
+            final selected = cat == _selectedCategory;
+            return ChoiceChip(
+              label: Text(cat),
+              selected: selected,
+              onSelected: (_) => setState(() {
+                _selectedCategory = cat;
+                _applyFilters();
+              }),
+              selectedColor: Colors.green.shade100,
+              labelStyle: TextStyle(color: selected ? Colors.green.shade800 : Colors.black),
+            );
+          },
+        ),
+      );
+
+  Widget _buildFilterAndSortBar() {
+    List<String> sortOptions = _selectedCategory == 'All'
+        ? ['Rating', 'Distance', 'Delivery Time']
+        : ['Rating', 'Price: Low to High', 'Price: High to Low'];
+    if (!sortOptions.contains(_sortOption)) {
+      _sortOption = 'Rating'; // Reset if current option is invalid
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('${_filteredData.length} items found', style: const TextStyle(color: Colors.grey)),
+          PopupMenuButton<String>(
+            onSelected: (value) => setState(() {
+              _sortOption = value;
+              _applyFilters();
+            }),
+            itemBuilder: (context) => sortOptions.map((opt) => PopupMenuItem<String>(value: opt, child: Text(opt))).toList(),
+            child: Row(
               children: [
-                // Filters
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => setState(() => _selectedFilter = "All"),
-                      child: _buildFilterChip("All", _selectedFilter == "All"),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => setState(() => _selectedFilter = "Fruits"),
-                      child: _buildFilterChip("Fruits", _selectedFilter == "Fruits"),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => setState(() => _selectedFilter = "Vegetables"),
-                      child: _buildFilterChip("Vegetables", _selectedFilter == "Vegetables"),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => setState(() => _selectedFilter = "Organic"),
-                      child: _buildFilterChip("Organic", _selectedFilter == "Organic"),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Info Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("247 items found",
-                        style: GoogleFonts.poppins(fontSize: 13)),
-                    Row(
-                      children: [
-                        Text("Sort by Rating",
-                            style: GoogleFonts.poppins(fontSize: 13)),
-                        const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Shop Cards
-                _buildShopCard(
-                  name: "Green Valley Market",
-                  rating: 4.8,
-                  distance: "2.3 km",
-                  status: "Open",
-                  color: Colors.green,
-                  products: [
-                    ProductItem("assets/apples.png", "Fresh Apples", "₹3.99/kg",
-                        "Red Delicious"),
-                    ProductItem("assets/carrots.png", "Organic Carrots",
-                        "₹2.49/kg", "1 lb bundle"),
-                  ],
-                ),
-                _buildShopCard(
-                  name: "Organic Paradise",
-                  rating: 4.5,
-                  distance: "1.8 km",
-                  status: "Open",
-                  color: Colors.green,
-                  products: [
-                    ProductItem("assets/bananas.png", "Bananas", "₹1.99/kg",
-                        "Organic bunch"),
-                    ProductItem("assets/spinach.png", "Fresh Spinach", "₹4.99/kg",
-                        "Baby spinach"),
-                  ],
-                ),
-                _buildShopCard(
-                  name: "Farm Fresh Corner",
-                  rating: 4.9,
-                  distance: "0.9 km",
-                  status: "Busy",
-                  color: Colors.orange,
-                  products: [
-                    ProductItem("assets/tomatoes.png", "Tomatoes", "₹3.49/kg",
-                        "Fresh & Juicy"),
-                    ProductItem("assets/cucumber.png", "Cucumbers", "₹2.89/kg",
-                        "Organic bundle"),
-                  ],
-                ),
+                Text('Sort by: $_sortOption', style: TextStyle(color: Colors.green.shade700)),
+                Icon(Icons.arrow_drop_down, color: Colors.green.shade700),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, bool selected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: selected ? Colors.green.shade100 : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Text(label,
-          style: GoogleFonts.poppins(
-              color: selected ? Colors.green : Colors.black87,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w400)),
-    );
-  }
-
-  Widget _buildShopCard({
-    required String name,
-    required double rating,
-    required String distance,
-    required String status,
-    required Color color,
-    required List<ProductItem> products,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.grey.shade200, blurRadius: 6, offset: const Offset(0, 3))
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Shop Header
-              Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.15),
-                      shape: BoxShape.circle,
+  Widget _buildShopList() => ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _filteredData.length,
+        itemBuilder: (context, index) {
+          final shop = _filteredData[index] as Shop;
+          return GestureDetector(
+            onTap: () => Navigator.of(context, rootNavigator: false).push(MaterialPageRoute(builder: (_) => ShopDetailScreen(shop: shop))),
+            child: Card(
+              margin: const EdgeInsets.only(bottom: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  children: [
+                    ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.asset(shop.image, width: 70, height: 70, fit: BoxFit.cover)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(shop.name, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(shop.description, style: const TextStyle(color: Colors.grey)),
+                          const SizedBox(height: 4),
+                          Row(children: [
+                            const Icon(Icons.star, color: Colors.amber, size: 16),
+                            Text(' ${shop.rating} • ${shop.distance} km'),
+                          ]),
+                        ],
+                      ),
                     ),
-                    child: Icon(Icons.storefront, color: color),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+
+  Widget _buildProductGrid() => GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.78,
+        ),
+        itemCount: _filteredData.length,
+        itemBuilder: (context, index) {
+          final product = _filteredData[index] as Product;
+          final shopName = _shopById[product.shopId]?.name ?? '';
+          return GestureDetector(
+            onTap: () => Navigator.of(context, rootNavigator: false).push(MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product))),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 6, offset: const Offset(0, 2))],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: Image.asset(product.image, height: 100, width: double.infinity, fit: BoxFit.cover),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(name,
-                            style: GoogleFonts.poppins(
-                                fontSize: 14, fontWeight: FontWeight.w600)),
+                        Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Text(shopName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                        const SizedBox(height: 4),
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(Icons.star, color: Colors.amber, size: 14),
-                            Text(" $rating ",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 12, fontWeight: FontWeight.w500)),
-                            Text("• $distance",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 12, color: Colors.grey)),
+                            Text('₹${product.price.toStringAsFixed(2)}', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600)),
+                            IconButton(
+                              icon: const Icon(Icons.add_shopping_cart, color: Colors.green),
+                              onPressed: () {
+                                Provider.of<CartProvider>(context, listen: false).addItem(product);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('${product.name} added to cart!'), duration: const Duration(seconds: 1)),
+                                );
+                              },
+                            ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(status,
-                        style: GoogleFonts.poppins(
-                            color: color,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500)),
-                  ),
                 ],
               ),
+            ),
+          );
+        },
+      );
 
-              const SizedBox(height: 12),
-              // Product Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ...products.map((p) => _buildProductCard(p)).toList(),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text("See all ➜",
-                    style: GoogleFonts.poppins(
-                        color: Colors.green, fontSize: 13)),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    _searchController.removeListener(_applyFilters);
+    _searchController.dispose();
+    super.dispose();
   }
-
-  Widget _buildProductCard(ProductItem item) {
-    return Container(
-      width: 140,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(item.image,
-                  height: 80, width: double.infinity, fit: BoxFit.cover)),
-          const SizedBox(height: 8),
-          Text(item.name,
-              style:
-                  GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 13)),
-          Text(item.subtitle,
-              style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(item.price,
-                  style: GoogleFonts.poppins(
-                      color: Colors.green, fontWeight: FontWeight.w600)),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                  borderRadius: BorderRadius.circular(50),
-                ),
-                padding: const EdgeInsets.all(4),
-                child: const Icon(Icons.add, size: 14, color: Colors.white),
-              )
-            ],
-          )
-        ],
-      ),
-    );
-  }
-}
-
-class ProductItem {
-  final String image;
-  final String name;
-  final String price;
-  final String subtitle;
-  ProductItem(this.image, this.name, this.price, this.subtitle);
 }

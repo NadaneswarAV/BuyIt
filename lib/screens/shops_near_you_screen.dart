@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-import 'main_navigation.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../data/data_provider.dart';
+import '../models/shop.dart';
+import '../widgets/shimmer_loading.dart';
+import 'shop_detail_screen.dart';
+
 
 class ShopsNearYouPage extends StatefulWidget {
   const ShopsNearYouPage({super.key});
@@ -9,60 +14,40 @@ class ShopsNearYouPage extends StatefulWidget {
 }
 
 class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
-  String selectedCategory = 'Grocery';
-  String searchQuery = '';
-  bool sortByRating = true;
-  // This screen does not own bottom navigation; `MainNavigation` does.
+  final TextEditingController _searchController = TextEditingController();
+  late Future<List<Shop>> _shopsFuture;
+  List<Shop> _allShops = [];
+  List<Shop> _filteredShops = [];
+  String _selectedCategory = 'All';
+  String _sortOption = 'Rating';
 
   final List<String> categories = [
+    'All',
     'Grocery',
     'Electronics',
     'Pharmacy',
     'Beauty',
   ];
 
-  final List<Shop> allShops = [
-    Shop(
-      name: 'Green Garden Bistro',
-      rating: 4.8,
-      description: 'Healthy • Organic • Salads',
-      delivery: 'Free delivery',
-      time: 15,
-      categories: ['Grocery', 'Beauty'],
-    ),
-    Shop(
-      name: 'Fresh Market Plus',
-      rating: 4.6,
-      description: 'Groceries • Fresh Produce',
-      delivery: '\$2.99 delivery',
-      time: 20,
-      categories: ['Grocery', 'Electronics'],
-    ),
-    Shop(
-      name: 'Health Hub Pharmacy',
-      rating: 4.9,
-      description: 'Medicines • Wellness Products',
-      delivery: 'Free delivery',
-      time: 10,
-      categories: ['Pharmacy', 'Beauty'],
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _shopsFuture = DataProvider().getShops().then((shops) {
+      setState(() {
+        _allShops = shops;
+        _applyFilters();
+      });
+      return shops;
+    });
+    _searchController.addListener(() {
+      setState(() {
+        _applyFilters();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    List<Shop> filtered =
-        allShops.where((shop) {
-          final matchCategory = shop.categories.contains(selectedCategory);
-          final matchSearch = shop.name.toLowerCase().contains(
-            searchQuery.toLowerCase(),
-          );
-          return matchCategory && matchSearch;
-        }).toList();
-
-    if (sortByRating) {
-      filtered.sort((a, b) => b.rating.compareTo(a.rating));
-    }
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -72,55 +57,68 @@ class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
             Navigator.of(context).pop();
           },
         ),
-        title: const Text('Shops near you'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () async {
-              final result = await showSearch(
-                context: context,
-                delegate: ShopSearchDelegate(allShops, selectedCategory),
-              );
-              if (result != null) setState(() => searchQuery = result);
-            },
-          ),
-        ],
+        backgroundColor: Colors.white,
+        elevation: 1,
+        title: const Text('Shops Near You'),
       ),
       body: Column(
         children: [
+          _buildSearchBar(),
           _buildCategorySelector(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('${filtered.length} items found'),
-                InkWell(
-                  onTap: () => setState(() => sortByRating = !sortByRating),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.sort, size: 18),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Sort by Rating',
-                        style: TextStyle(color: Colors.blue[700]),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _buildFilterAndSortBar(),
           Expanded(
-            child: ListView.builder(
-              itemCount: filtered.length,
-              itemBuilder: (context, index) {
-                final shop = filtered[index];
-                return _buildShopCard(shop);
+            child: FutureBuilder<List<Shop>>(
+              future: _shopsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting && _allShops.isEmpty) {
+                  return const ShopListShimmer();
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+                if (_filteredShops.isEmpty) {
+                  return const Center(child: Text("No shops found matching your criteria."));
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.only(top: 8),
+                  itemCount: _filteredShops.length,
+                  itemBuilder: (context, index) {
+                    final shop = _filteredShops[index];
+                    return _buildShopCard(shop);
+                  },
+                );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search for shops...',
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                  },
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30.0),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.grey[200],
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+        ),
       ),
     );
   }
@@ -135,12 +133,16 @@ class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final cat = categories[index];
-          final selected = cat == selectedCategory;
+          final selected = cat == _selectedCategory;
           return ChoiceChip(
+            backgroundColor: Colors.grey.shade200,
             label: Text(cat),
             selected: selected,
-            onSelected: (_) => setState(() => selectedCategory = cat),
-            selectedColor: Colors.green,
+            onSelected: (_) => setState(() {
+              _selectedCategory = cat;
+              _applyFilters();
+            }),
+            selectedColor: Colors.green.shade100,
             labelStyle: TextStyle(
               color: selected ? Colors.white : Colors.black,
             ),
@@ -150,66 +152,29 @@ class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
     );
   }
 
-  Widget _buildShopCard(Shop shop) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildFilterAndSortBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // placeholder if no image
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: Container(
-              height: 160,
-              width: double.infinity,
-              color: Colors.grey[300],
-              child: const Icon(Icons.store, size: 50, color: Colors.grey),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Text('${_filteredShops.length} shops found', style: const TextStyle(color: Colors.grey)),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              setState(() {
+                _sortOption = value;
+                _applyFilters();
+              });
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(value: 'Rating', child: Text('Sort by Rating')),
+              const PopupMenuItem<String>(value: 'Distance', child: Text('Sort by Distance')),
+              const PopupMenuItem<String>(value: 'Delivery Time', child: Text('Sort by Delivery Time')),
+            ],
+            child: Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      shop.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.green, size: 18),
-                        Text(
-                          shop.rating.toString(),
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  shop.description,
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('${shop.time}-25 min'),
-                    Text(
-                      shop.delivery,
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
+                Text('Sort by: $_sortOption', style: TextStyle(color: Colors.green.shade700)),
+                Icon(Icons.arrow_drop_down, color: Colors.green.shade700),
               ],
             ),
           ),
@@ -217,98 +182,89 @@ class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
       ),
     );
   }
-}
 
-class Shop {
-  final String name;
-  final double rating;
-  final String description;
-  final String delivery;
-  final int time;
-  final List<String> categories;
-
-  Shop({
-    required this.name,
-    required this.rating,
-    required this.description,
-    required this.delivery,
-    required this.time,
-    required this.categories,
-  });
-}
-
-class ShopSearchDelegate extends SearchDelegate<String> {
-  final List<Shop> allShops;
-  final String selectedCategory;
-
-  ShopSearchDelegate(this.allShops, this.selectedCategory);
-
-  @override
-  List<Widget>? buildActions(BuildContext context) => [
-    IconButton(onPressed: () => query = '', icon: const Icon(Icons.clear)),
-  ];
-
-  @override
-  Widget? buildLeading(BuildContext context) => IconButton(
-    icon: const Icon(Icons.arrow_back),
-    onPressed: () => close(context, ''),
-  );
-
-  @override
-  Widget buildResults(BuildContext context) {
-    final results =
-        allShops
-            .where(
-              (s) =>
-                  s.categories.contains(selectedCategory) &&
-                  s.name.toLowerCase().contains(query.toLowerCase()),
-            )
-            .toList();
-
-    if (results.isEmpty) {
-      return const Center(child: Text('No shops found'));
-    }
-
-    return ListView.builder(
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        final shop = results[index];
-        return ListTile(
-          leading: const Icon(Icons.store),
-          title: Text(shop.name),
-          subtitle: Text(shop.description),
-          trailing: Text(shop.rating.toString()),
-          onTap: () => close(context, shop.name),
-        );
+  Widget _buildShopCard(Shop shop) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShopDetailScreen(shop: shop)));
       },
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 2,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Image.asset(shop.image, height: 140, width: double.infinity, fit: BoxFit.cover),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(shop.name, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(shop.description, style: const TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 18),
+                          Text(' ${shop.rating}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                          Text(' • ${shop.distance} km', style: const TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                      Text('${shop.time}-${shop.time + 10} min • ${shop.delivery}', style: const TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    final suggestions =
-        allShops
-            .where(
-              (s) =>
-                  s.categories.contains(selectedCategory) &&
-                  s.name.toLowerCase().contains(query.toLowerCase()),
-            )
-            .toList();
+  void _applyFilters() {
+    List<Shop> tempShops = _allShops;
 
-    return ListView.builder(
-      itemCount: suggestions.length,
-      itemBuilder: (context, index) {
-        final shop = suggestions[index];
-        return ListTile(
-          leading: const Icon(Icons.store),
-          title: Text(shop.name),
-          subtitle: Text(shop.description),
-          onTap: () {
-            query = shop.name;
-            showResults(context);
-          },
-        );
-      },
-    );
+    // Filter by category
+    if (_selectedCategory != 'All') {
+      tempShops = tempShops.where((shop) => shop.categories.contains(_selectedCategory)).toList();
+    }
+
+    // Filter by search query
+    final query = _searchController.text.toLowerCase();
+    if (query.isNotEmpty) {
+      tempShops = tempShops.where((shop) => shop.name.toLowerCase().contains(query)).toList();
+    }
+
+    // Sort the list
+    switch (_sortOption) {
+      case 'Rating':
+        tempShops.sort((a, b) => b.rating.compareTo(a.rating));
+        break;
+      case 'Distance':
+        tempShops.sort((a, b) => a.distance.compareTo(b.distance));
+        break;
+      case 'Delivery Time':
+        tempShops.sort((a, b) => a.time.compareTo(b.time));
+        break;
+    }
+
+    setState(() {
+      _filteredShops = tempShops;
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }

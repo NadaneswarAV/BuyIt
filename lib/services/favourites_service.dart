@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import '../services/storage_service.dart';
 
 class FavouritesService {
   static const String _favKey = 'favourites_json';
+  static final ValueNotifier<int> version = ValueNotifier<int>(0);
 
   static Future<List<Map<String, dynamic>>> load() async {
     final saved = await StorageService.getString(_favKey);
@@ -11,8 +13,9 @@ class FavouritesService {
     return data.cast<Map<String, dynamic>>();
   }
 
-  static Future<void> save(List<Map<String, dynamic>> favs) async {
-    await StorageService.setString(_favKey, json.encode(favs));
+  static Future<void> save(List<Map<String, dynamic>> list) async {
+    await StorageService.setString(_favKey, json.encode(list));
+    version.value++;
   }
 
   static Future<void> addShop({

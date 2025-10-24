@@ -75,28 +75,63 @@ class _SearchScreenState extends State<SearchScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        title: TextField(
-          controller: _searchController,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'Search for food, groceries...',
-            border: InputBorder.none,
-            hintStyle: GoogleFonts.poppins(color: Colors.grey),
+        backgroundColor: Colors.green,
+        elevation: 0,
+        toolbarHeight: 72,
+        title: Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 8),
+          child: Container(
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.search, color: Colors.grey),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'Search for food, groceries...',
+                      hintStyle: GoogleFonts.poppins(color: Colors.grey, fontSize: 14),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<SearchType>(
+                    value: _searchType,
+                    icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                    items: const [
+                      DropdownMenuItem(value: SearchType.shops, child: Text('Shops')),
+                      DropdownMenuItem(value: SearchType.items, child: Text('Items')),
+                    ],
+                    onChanged: (val) {
+                      if (val == null) return;
+                      setState(() => _searchType = val);
+                      _performSearch(_searchController.text);
+                    },
+                  ),
+                ),
+                if (_searchController.text.isNotEmpty) ...[
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () => _searchController.clear(),
+                    child: const Icon(Icons.clear, color: Colors.grey),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
-        actions: [
-          if (_searchController.text.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () => _searchController.clear(),
-            )
-        ],
       ),
       body: Column(
         children: [
-          _buildSearchFilter(),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -182,7 +217,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return ListTile(
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.asset(shop.image, width: 50, height: 50, fit: BoxFit.cover),
+        child: Image.asset(shop.image ?? 'assets/images/logo.png', width: 50, height: 50, fit: BoxFit.cover),
       ),
       title: Text(shop.name),
       subtitle: Row(

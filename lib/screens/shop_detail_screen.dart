@@ -32,8 +32,8 @@ class _ShopDetailScreenState extends State<ShopDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _productsFuture = DataProvider().getProducts(shopId: widget.shop.id);
-    _reviewsFuture = DataProvider().getReviews(widget.shop.id);
+    _productsFuture = DataProvider().getProducts(shopId: widget.shop.id.toString());
+    _reviewsFuture = DataProvider().getReviews(widget.shop.id.toString());
     _reviewsFuture.then((reviews) => setState(() => _reviews = reviews));
     _productsFuture.then((products) {
       _allProducts = products;
@@ -185,7 +185,7 @@ class _ShopDetailScreenState extends State<ShopDetailScreen> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.asset(widget.shop.image, width: 80, height: 80, fit: BoxFit.cover),
+            child: Image.asset(widget.shop.image ?? 'assets/images/logo.png', width: 80, height: 80, fit: BoxFit.cover),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -361,7 +361,7 @@ class _ShopDetailScreenState extends State<ShopDetailScreen> {
           ElevatedButton(
             onPressed: () {
               if (rating > 0 && reviewController.text.isNotEmpty) {
-                final newReview = Review(id: 'rev_new_${DateTime.now().millisecondsSinceEpoch}', shopId: widget.shop.id, userName: 'You', rating: rating, comment: reviewController.text);
+                final newReview = Review(id: 'rev_new_${DateTime.now().millisecondsSinceEpoch}', shopId: widget.shop.id.toString(), userName: 'You', rating: rating, comment: reviewController.text);
                 DataProvider().addReview(newReview); // Simulate API call
                 setState(() => _reviews.insert(0, newReview)); // Add to list locally for instant UI update
                 Navigator.of(ctx).pop();

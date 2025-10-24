@@ -197,7 +197,7 @@ class _ShopsNearYouPageState extends State<ShopsNearYouPage> {
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Image.asset(shop.image, height: 140, width: double.infinity, fit: BoxFit.cover),
+              child: Image.asset(shop.image ?? 'assets/images/logo.png', height: 140, width: double.infinity, fit: BoxFit.cover),
             ),
             Padding(
               padding: const EdgeInsets.all(12.0),

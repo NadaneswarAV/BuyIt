@@ -69,7 +69,7 @@ class _FreshMarketScreenState extends State<FreshMarketScreen> {
     ]);
     _allProducts = results[0] as List<Product>;
     _allShops = results[1] as List<Shop>;
-    _shopById = {for (final s in _allShops) s.id: s};
+    _shopById = {for (final s in _allShops) s.id.toString(): s};
     _applyFilters();
     return _filteredData;
   }
@@ -256,7 +256,7 @@ class _FreshMarketScreenState extends State<FreshMarketScreen> {
                 padding: const EdgeInsets.all(12.0),
                 child: Row(
                   children: [
-                    ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.asset(shop.image, width: 70, height: 70, fit: BoxFit.cover)),
+                    ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.asset(shop.image ?? 'assets/images/logo.png', width: 70, height: 70, fit: BoxFit.cover)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(

@@ -10,6 +10,8 @@ import 'search_screen.dart';
 import 'shop_detail_screen.dart';
 import '../services/location_service.dart';
 import '../services/storage_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/cart_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -210,7 +212,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: GoogleFonts.poppins(fontSize: 13)),
                           const SizedBox(height: 8),
                           ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              final cart = Provider.of<CartProvider>(context, listen: false);
+                              final nav = (MainNavigation.instance ?? MainNavigation.mainKey.currentState);
+                              if (cart.itemCount > 0) {
+                                nav?.setIndex(3); // Cart tab
+                              } else {
+                                nav?.setIndex(1); // Categories tab
+                              }
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               shape: RoundedRectangleBorder(
@@ -397,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ClipRRect(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: Image.asset(shop.image, height: 140, width: double.infinity, fit: BoxFit.cover)),
+                  child: Image.asset(shop.image ?? 'assets/images/logo.png', height: 140, width: double.infinity, fit: BoxFit.cover)),
               Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(

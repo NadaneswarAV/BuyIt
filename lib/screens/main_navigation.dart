@@ -45,11 +45,10 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   void _onItemTapped(int index) {
-    // If the user is re-selecting the same tab, pop to the first route in that tab's navigator.
-    if (index == _selectedIndex) {
-      _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
-      return;
-    }
+    // Always ensure the target tab shows its root when selected
+    _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+    // If the user is re-selecting the same tab, we already popped to root above
+    if (index == _selectedIndex) return;
 
     setState(() {
       int previousIndex = _selectedIndex;

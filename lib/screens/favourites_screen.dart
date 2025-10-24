@@ -10,6 +10,7 @@ import 'product_detail_screen.dart';
 import 'shop_detail_screen.dart';
 import '../screens/cart_screen.dart';
 import '../services/storage_service.dart';
+import '../services/favourites_service.dart';
 import 'main_navigation.dart';
 
 class FavouritesScreen extends StatefulWidget {
@@ -30,6 +31,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> with WidgetsBinding
 
   @override
   void dispose() {
+    FavouritesService.version.removeListener(_loadFavourites);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -42,6 +44,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> with WidgetsBinding
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadFavourites();
+    FavouritesService.version.addListener(_loadFavourites);
   }
 
   @override
@@ -173,13 +176,21 @@ class _FavouritesScreenState extends State<FavouritesScreen> with WidgetsBinding
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: const Text(
-                            "Go to Cart",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Text(
+                                "Go to Cart",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.shopping_cart, color: Colors.white),
+                            ],
                           ),
                         ),
                       )
@@ -371,14 +382,13 @@ class _FavouritesScreenState extends State<FavouritesScreen> with WidgetsBinding
       final Shop found = shops.firstWhere(
         (s) => s.name.toLowerCase() == storeName.toLowerCase(),
         orElse: () => Shop(
-          id: 'unknown',
+          id: 0,
           name: storeName,
-          rating: (item['rating'] ?? 4.5).toDouble(),
           description: 'Shop',
-          delivery: 'Standard',
-          time: 30,
-          distance: 1.0,
-          categories: const [],
+          location: 'Unknown',
+          averageRating: (item['rating'] ?? 4.5).toDouble(),
+          reviewCount: 0,
+          shopProducts: [],
           image: 'assets/temp/store.png',
         ),
       );

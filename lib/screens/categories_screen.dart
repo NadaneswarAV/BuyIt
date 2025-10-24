@@ -10,6 +10,8 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
+  final TextEditingController _searchCtl = TextEditingController();
+  String _query = '';
 
   final Map<String, List<_SubCat>> _sections = {
     'Grocery': [
@@ -37,6 +39,23 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     ],
   };
 
+  Map<String, List<_SubCat>> get _filteredSections {
+    if (_query.trim().isEmpty) return _sections;
+    final q = _query.toLowerCase();
+    final Map<String, List<_SubCat>> out = {};
+    _sections.forEach((section, subs) {
+      final matched = subs.where((s) => s.title.toLowerCase().contains(q)).toList();
+      if (matched.isNotEmpty) out[section] = matched;
+    });
+    return out;
+  }
+
+  @override
+  void dispose() {
+    _searchCtl.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,7 +79,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         shape: BoxShape.circle,
                         color: Colors.white,
                       ),
-                      child: const Center(child: Text("R", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green))),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -73,18 +93,27 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.sort, color: Colors.grey),
+                            const Icon(Icons.search, color: Colors.grey),
                             const SizedBox(width: 8),
                             Expanded(
                               child: TextField(
+                                controller: _searchCtl,
+                                onChanged: (v) => setState(() => _query = v),
                                 decoration: InputDecoration(
-                                  hintText: 'Search',
+                                  hintText: 'Search categories',
                                   hintStyle: GoogleFonts.poppins(color: Colors.grey, fontSize: 14),
                                   border: InputBorder.none,
                                 ),
                               ),
                             ),
-                            const Icon(Icons.search, color: Colors.grey),
+                            if (_query.isNotEmpty)
+                              GestureDetector(
+                                onTap: () {
+                                  _searchCtl.clear();
+                                  setState(() => _query = '');
+                                },
+                                child: const Icon(Icons.clear, color: Colors.grey),
+                              ),
                           ],
                         ),
                       ),
@@ -100,7 +129,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               ),
               const SizedBox(height: 10),
 
-              ..._sections.entries.map((entry) => _buildSection(entry.key, entry.value)).toList(),
+              ..._filteredSections.entries.map((entry) => _buildSection(entry.key, entry.value)).toList(),
               const SizedBox(height: 12),
             ],
           ),

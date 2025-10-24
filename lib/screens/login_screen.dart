@@ -1,10 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../widgets/custom_textfield.dart';
 import '../widgets/rounded_button.dart';
 import 'main_navigation.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.226.208.163:8000/dj-rest-auth/login/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username':'nadan','email': email, 'password': password}),
+      );
+
+      if (response.statusCode == 200) {
+        // Login successful
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MainNavigation(key: MainNavigation.mainKey),
+          ),
+          (route) => false,
+        );
+      } else {
+        // Login failed
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not found')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please try again.')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +117,8 @@ class LoginScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.white70),
                   ),
                   const SizedBox(height: 25),
-                  const CustomTextField(hint: "Email"),
-                  const CustomTextField(hint: "Password", isPassword: true),
+                  CustomTextField(hint: "Email", controller: _emailController),
+                  CustomTextField(hint: "Password", isPassword: true, controller: _passwordController),
                   const SizedBox(height: 10),
                   const Text(
                     "FORGOT PASSWORD",
@@ -69,16 +131,8 @@ class LoginScreen extends StatelessWidget {
                   Image.asset('assets/images/character.png', height: 80),
                   const SizedBox(height: 20),
                   RoundedButton(
-                    text: "DONE",
-                    onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MainNavigation(key: MainNavigation.mainKey),
-                        ),
-                        (route) => false,
-                      );
-                    },
+                    text: _isLoading ? "LOGGING IN..." : "DONE",
+                    onPressed: _isLoading ? () {} : _login,
                   ),
                   const SizedBox(height: 10),
                   TextButton(

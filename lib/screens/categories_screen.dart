@@ -80,7 +80,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         color: Colors.white,
                       ),
                       clipBehavior: Clip.antiAlias,
-                      child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
+                      child: Image.asset('assets/images/logo1.png', fit: BoxFit.contain),
                     ),
                     const SizedBox(width: 10),
                     Expanded(

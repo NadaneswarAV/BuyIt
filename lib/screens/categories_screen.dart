@@ -1,3 +1,4 @@
+// CategoriesScreen: Browse all subcategories grouped by main category; routes into ItemScreen.
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'item_screen.dart';
@@ -153,7 +154,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => FreshMarketScreen(
+                      builder: (_) => ItemScreen(
                         initialFilter: s.filter,
                         initialIsCategory: false,
                         initialCategoryTitle: s.parent,

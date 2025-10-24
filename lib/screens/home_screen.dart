@@ -1,3 +1,4 @@
+// HomeScreen: Landing page with location, search, dynamic categories, featured shops.
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/data_provider.dart';
@@ -461,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             onTap: () {
               Navigator.of(context, rootNavigator: false).push(
                 MaterialPageRoute(
-                  builder: (_) => FreshMarketScreen(
+                  builder: (_) => ItemScreen(
                     initialFilter: title,
                     initialIsCategory: true,
                   ),
@@ -510,7 +511,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   onPressed: () {
                     Navigator.of(context, rootNavigator: false).push(
                       MaterialPageRoute(
-                        builder: (_) => FreshMarketScreen(initialFilter: category, initialIsCategory: true),
+                        builder: (_) => ItemScreen(initialFilter: category, initialIsCategory: true),
                       ),
                     );
                   },
@@ -532,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   onTap: () {
                     Navigator.of(context, rootNavigator: false).push(
                       MaterialPageRoute(
-                        builder: (_) => FreshMarketScreen(
+                        builder: (_) => ItemScreen(
                           initialFilter: sc['filter']!,
                           initialIsCategory: false,
                           initialCategoryTitle: category,

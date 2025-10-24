@@ -1,3 +1,8 @@
+// ItemScreen: Displays shops by main category (All) and products by subcategory filters.
+// Navigation params:
+// - initialFilter: when initialIsCategory=true, this is the main category name; when false, it's the subcategory filter value.
+// - initialIsCategory: true if opened from a main category tap; false if from a subcategory.
+// - initialCategoryTitle: the parent category name used for screen title when opened via subcategory.
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -10,17 +15,17 @@ import '../widgets/shimmer_loading.dart';
 import 'product_detail_screen.dart';
 import 'shop_detail_screen.dart';
 
-class FreshMarketScreen extends StatefulWidget {
+class ItemScreen extends StatefulWidget {
   final String? initialFilter;
   final bool? initialIsCategory; // true if coming from a main category tap
   final String? initialCategoryTitle; // used for page title when opening via subcategory
-  const FreshMarketScreen({super.key, this.initialFilter, this.initialIsCategory, this.initialCategoryTitle});
+  const ItemScreen({super.key, this.initialFilter, this.initialIsCategory, this.initialCategoryTitle});
 
   @override
-  State<FreshMarketScreen> createState() => _FreshMarketScreenState();
+  State<ItemScreen> createState() => _ItemScreenState();
 }
 
-class _FreshMarketScreenState extends State<FreshMarketScreen> {
+class _ItemScreenState extends State<ItemScreen> {
   final TextEditingController _searchController = TextEditingController();
   late Future<List<dynamic>> _dataFuture;
   List<Product> _allProducts = [];

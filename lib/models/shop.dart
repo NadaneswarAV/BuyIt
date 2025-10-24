@@ -1,5 +1,5 @@
 class Shop {
-  final int id;
+  final String id;
   final String name;
   final String description;
   final String location;
@@ -33,7 +33,8 @@ class Shop {
 
   factory Shop.fromJson(Map<String, dynamic> json) {
     return Shop(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
+      // Normalize id to String regardless of API (int) or local JSON (string like "shop_001")
+      id: json['id']?.toString() ?? '0',
       name: json['name'],
       description: json['description'],
       location: json['location'] ?? '',

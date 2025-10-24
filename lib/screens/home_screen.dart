@@ -4,7 +4,7 @@ import '../data/data_provider.dart';
 import '../models/shop.dart';
 import '../widgets/shimmer_loading.dart';
 import 'shops_near_you_screen.dart';
-import 'fresh_market_screen.dart';
+import 'item_screen.dart';
 import 'main_navigation.dart';
 import 'search_screen.dart';
 import 'shop_detail_screen.dart';
@@ -12,6 +12,8 @@ import '../services/location_service.dart';
 import '../services/storage_service.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
+import '../data/data_provider.dart';
+import 'dart:io';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,55 +22,88 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String? _locationText;
   SearchType _searchMode = SearchType.items;
   final ScrollController _pageController = ScrollController();
   final ScrollController _featuredController = ScrollController();
-
-  final Map<String, List<Map<String, String>>> _categoryMap = {
-    'Grocery': [
-      {'title': 'Fruits & Vegetables', 'filter': 'Fruits', 'image': 'assets/temp/fruits.png'},
-      {'title': 'Dairy & Eggs', 'filter': 'Dairy', 'image': 'assets/temp/diary.png'},
-      {'title': 'Grains & Oil', 'filter': 'Organic', 'image': 'assets/temp/grains.png'},
-    ],
-    'Snacks & Drinks': [
-      {'title': 'Tea, Coffee & more', 'filter': 'Tea', 'image': 'assets/temp/tea.png'},
-      {'title': 'Icecreams & more', 'filter': 'Icecreams', 'image': 'assets/temp/icecreams.png'},
-      {'title': 'Frozen food', 'filter': 'Frozen', 'image': 'assets/temp/frozen.png'},
-      {'title': 'Sweets', 'filter': 'Sweets', 'image': 'assets/temp/sweets.png'},
-    ],
-    'Beauty & Personal Care': [
-      {'title': 'Beauty Parlour', 'filter': 'Beauty', 'image': 'assets/temp/beauty.png'},
-      {'title': 'Skincare', 'filter': 'Skincare', 'image': 'assets/temp/skincare.png'},
-      {'title': 'Protein & Nutrition', 'filter': 'Protein', 'image': 'assets/temp/whey.png'},
-      {'title': 'Baby Care', 'filter': 'Baby', 'image': 'assets/temp/baby.png'},
-    ],
-    'Household Essentials': [
-      {'title': 'Kitchen & Dining', 'filter': 'Kitchen', 'image': 'assets/temp/kitchen.png'},
-      {'title': 'Home Needs', 'filter': 'Home', 'image': 'assets/temp/home.png'},
-      {'title': 'Electronics', 'filter': 'Electronics', 'image': 'assets/temp/electronics.png'},
-      {'title': 'Pet Care', 'filter': 'Pet', 'image': 'assets/temp/pet.png'},
-    ],
-  };
+  Map<String, List<Map<String, String>>> _categoryMap = {};
+  String? _avatarPath; // from profile
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadSavedLocation();
+    _loadCategories();
+    _loadAvatar();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload avatar when returning to this screen
+    _loadAvatar();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadAvatar();
+    }
+  }
+
+  ImageProvider _avatarProvider() {
+    if (_avatarPath == null || _avatarPath!.isEmpty) {
+      return const AssetImage('assets/temp/profile.jpg');
+    }
+    if (_avatarPath!.startsWith('assets/')) {
+      return AssetImage(_avatarPath!);
+    }
+    return FileImage(File(_avatarPath!));
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     _featuredController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  Future<void> _loadCategories() async {
+    final data = await DataProvider().getCategories();
+    if (!mounted) return;
+    setState(() => _categoryMap = data);
   }
 
   Future<void> _loadSavedLocation() async {
     final saved = await StorageService.getString(StorageKeys.savedLocation);
     if (!mounted) return;
     setState(() => _locationText = saved);
+  }
+
+  Future<void> _loadAvatar() async {
+    // try user-saved path first
+    final saved = await StorageService.getString(StorageKeys.profileImagePath);
+    if (saved != null && saved.isNotEmpty) {
+      if (!mounted) return;
+      setState(() => _avatarPath = saved);
+      // Evict cached image for this file so UI refreshes immediately
+      try {
+        await FileImage(File(saved)).evict();
+      } catch (_) {}
+      return;
+    }
+    // fallback to profile.json avatar
+    try {
+      final profile = await DataProvider().getProfile();
+      final avatar = profile['avatar'] as String?;
+      if (avatar != null && avatar.isNotEmpty) {
+        if (!mounted) return;
+        setState(() => _avatarPath = avatar);
+      }
+    } catch (_) {}
   }
 
   Future<void> _handleLocationTap() async {
@@ -132,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                         child: CircleAvatar(
                           radius: 18,
-                          backgroundImage: AssetImage('assets/temp/profile.jpg'),
+                          backgroundImage: _avatarProvider(),
                         ),
                       )
                     ],
@@ -244,45 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.w600, fontSize: 16)),
             ),
             const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildCategory(context, Icons.local_cafe, "Snacks & Drinks",
-                      Colors.green.shade100, Colors.green),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context, rootNavigator: false).push(MaterialPageRoute(builder: (_) => const FreshMarketScreen()));
-                    },
-                    child: Container(
-                      width: 70,
-                      height: 70,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade100,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(Icons.shopping_bag_outlined, color: Colors.blue, size: 28),
-                          const SizedBox(height: 6),
-                          Text(
-                            "Grocery",
-                            style: GoogleFonts.poppins(fontSize: 11),
-                            textAlign: TextAlign.center,
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                  _buildCategory(context, Icons.spa_outlined, "Wellness",
-                      Colors.purple.shade100, Colors.purple),
-                  _buildCategory(context, Icons.home_outlined, "Homewares",
-                      Colors.red.shade100, Colors.red),
-                ],
-              ),
-            ),
+            _buildTopCategoryScroller(context),
 
             const SizedBox(height: 24),
             // Featured Shops
@@ -442,6 +439,57 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTopCategoryScroller(BuildContext context) {
+    final categories = _categoryMap.keys.toList();
+    if (categories.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return SizedBox(
+      height: 96,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final title = categories[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.of(context, rootNavigator: false).push(
+                MaterialPageRoute(
+                  builder: (_) => FreshMarketScreen(
+                    initialFilter: title,
+                    initialIsCategory: true,
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              width: 120,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(color: Colors.grey.shade200, blurRadius: 5, offset: const Offset(0, 2)),
+                ],
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Center(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

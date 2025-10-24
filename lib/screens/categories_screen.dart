@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'fresh_market_screen.dart';
+import 'item_screen.dart';
+import '../data/data_provider.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -12,32 +13,25 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen> {
   final TextEditingController _searchCtl = TextEditingController();
   String _query = '';
+  Map<String, List<_SubCat>> _sections = {};
 
-  final Map<String, List<_SubCat>> _sections = {
-    'Grocery': [
-      _SubCat(parent: 'Grocery', title: 'Fruits & vegetables', filter: 'Fruits', image: 'assets/temp/fruits.png'),
-      _SubCat(parent: 'Grocery', title: 'Diary, Bread & Eggs', filter: 'Dairy', image: 'assets/temp/diary.png'),
-      _SubCat(parent: 'Grocery', title: 'Grains & oil', filter: 'Organic', image: 'assets/temp/grains.png'),
-    ],
-    'Snacks & Drinks': [
-      _SubCat(parent: 'Snacks & Drinks', title: 'Tea, Coffee & more', filter: 'Tea', image: 'assets/temp/tea.png'),
-      _SubCat(parent: 'Snacks & Drinks', title: 'Icecreams & more', filter: 'Icecreams', image: 'assets/temp/icecreams.png'),
-      _SubCat(parent: 'Snacks & Drinks', title: 'Frozen food', filter: 'Frozen', image: 'assets/temp/frozen.png'),
-      _SubCat(parent: 'Snacks & Drinks', title: 'Sweets', filter: 'Sweets', image: 'assets/temp/sweets.png'),
-    ],
-    'Beauty & Personal Care': [
-      _SubCat(parent: 'Beauty & Personal Care', title: 'Beauty Parlour', filter: 'Beauty', image: 'assets/temp/beauty.png'),
-      _SubCat(parent: 'Beauty & Personal Care', title: 'Skincare', filter: 'Skincare', image: 'assets/temp/skincare.png'),
-      _SubCat(parent: 'Beauty & Personal Care', title: 'Protein & Nutrition', filter: 'Protein', image: 'assets/temp/whey.png'),
-      _SubCat(parent: 'Beauty & Personal Care', title: 'Baby Care', filter: 'Baby', image: 'assets/temp/baby.png'),
-    ],
-    'Household Essentials': [
-      _SubCat(parent: 'Household Essentials', title: 'Kitchen & Dining', filter: 'Kitchen', image: 'assets/temp/kitchen.png'),
-      _SubCat(parent: 'Household Essentials', title: 'Home Needs', filter: 'Home', image: 'assets/temp/home.png'),
-      _SubCat(parent: 'Household Essentials', title: 'Electronics', filter: 'Electronics', image: 'assets/temp/electronics.png'),
-      _SubCat(parent: 'Household Essentials', title: 'Pet Care', filter: 'Pet', image: 'assets/temp/pet.png'),
-    ],
-  };
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final raw = await DataProvider().getCategories();
+    final mapped = <String, List<_SubCat>>{};
+    raw.forEach((key, list) {
+      mapped[key] = list
+          .map((e) => _SubCat(parent: e['parent']!, title: e['title']!, filter: e['filter']!, image: e['image']!))
+          .toList();
+    });
+    if (!mounted) return;
+    setState(() => _sections = mapped);
+  }
 
   Map<String, List<_SubCat>> get _filteredSections {
     if (_query.trim().isEmpty) return _sections;

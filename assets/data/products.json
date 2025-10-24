@@ -17,7 +17,7 @@
     "description": "Tender organic spinach leaves, thoroughly cleaned.",
     "price": 60.0,
     "unit": "bunch",
-    "category": "Vegetables",
+    "category": "Organic",
     "image": "assets/temp/restaurant.jpg",
     "rating": 4.5
   },
@@ -50,7 +50,7 @@
     "description": "Wi‑Fi enabled RGB LED bulb compatible with voice assistants.",
     "price": 499.0,
     "unit": "piece",
-    "category": "Electronics",
+    "category": "Home",
     "image": "assets/temp/home.png",
     "rating": 4.2
   },
@@ -72,7 +72,7 @@
     "description": "Broad‑spectrum sunscreen, non‑greasy and water resistant.",
     "price": 499.0,
     "unit": "100 ml",
-    "category": "Beauty",
+    "category": "Skincare",
     "image": "assets/temp/skincare.png",
     "rating": 4.5
   },
@@ -83,7 +83,7 @@
     "description": "Immunity support vitamin C, 1000mg tablets.",
     "price": 299.0,
     "unit": "bottle",
-    "category": "Pharmacy",
+    "category": "Baby",
     "image": "assets/temp/baby.png",
     "rating": 4.4
   },
@@ -94,7 +94,7 @@
     "description": "Fast‑reading digital thermometer with fever indicator.",
     "price": 249.0,
     "unit": "piece",
-    "category": "Pharmacy",
+    "category": "Baby",
     "image": "assets/temp/home.png",
     "rating": 4.3
   },
@@ -127,7 +127,7 @@
     "description": "Durable non‑stick pan for everyday cooking.",
     "price": 999.0,
     "unit": "piece",
-    "category": "Home",
+    "category": "Kitchen",
     "image": "assets/temp/kitchen.png",
     "rating": 4.2
   },
@@ -138,7 +138,7 @@
     "description": "Stainless steel 8‑inch chef knife with ergonomic handle.",
     "price": 749.0,
     "unit": "piece",
-    "category": "Home",
+    "category": "Kitchen",
     "image": "assets/temp/kitchen.png",
     "rating": 4.3
   },
@@ -149,7 +149,7 @@
     "description": "Crunchy organic carrots, great for salads and cooking.",
     "price": 80.0,
     "unit": "kg",
-    "category": "Vegetables",
+    "category": "Organic",
     "image": "assets/temp/restaurant.jpg",
     "rating": 4.4
   },
@@ -182,7 +182,7 @@
     "description": "Farm fresh eggs from free‑range hens.",
     "price": 85.0,
     "unit": "dozen",
-    "category": "Organic",
+    "category": "Dairy",
     "image": "assets/temp/restaurant.jpg",
     "rating": 4.6
   }

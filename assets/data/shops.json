@@ -7,7 +7,7 @@
     "delivery": "Free delivery over ₹499",
     "time": 25,
     "distance": 1.2,
-    "categories": ["Grocery", "Fruits", "Vegetables"],
+    "categories": ["Grocery"],
     "image": "assets/temp/grocery.jpg"
   },
   {
@@ -18,7 +18,7 @@
     "delivery": "₹29 delivery fee",
     "time": 35,
     "distance": 3.8,
-    "categories": ["Electronics"],
+    "categories": ["Household Essentials"],
     "image": "assets/temp/electronics.png"
   },
   {
@@ -29,7 +29,7 @@
     "delivery": "Free delivery over ₹799",
     "time": 30,
     "distance": 2.1,
-    "categories": ["Beauty"],
+    "categories": ["Beauty & Personal Care"],
     "image": "assets/temp/beauty.png"
   },
   {
@@ -40,7 +40,7 @@
     "delivery": "₹19 delivery fee",
     "time": 20,
     "distance": 0.9,
-    "categories": ["Pharmacy"],
+    "categories": ["Beauty & Personal Care"],
     "image": "assets/temp/baby.png"
   },
   {
@@ -51,7 +51,7 @@
     "delivery": "Free delivery over ₹399",
     "time": 22,
     "distance": 1.5,
-    "categories": ["Grocery", "Fruits"],
+    "categories": ["Grocery"],
     "image": "assets/temp/fruits.png"
   },
   {
@@ -62,7 +62,7 @@
     "delivery": "₹25 delivery fee",
     "time": 40,
     "distance": 4.6,
-    "categories": ["Home", "Kitchen"],
+    "categories": ["Household Essentials"],
     "image": "assets/temp/kitchen.png"
   }
 ]

@@ -32,9 +32,11 @@ class _FreshMarketScreenState extends State<FreshMarketScreen> {
   String _sortOption = 'Rating';
   String? _contextCategory; // when coming from a main category
   String _pageTitle = 'Fresh Market';
-
-  final List<String> _defaultCategories = ['All', 'Fruits', 'Vegetables', 'Organic', 'Dairy'];
+  final List<String> _defaultCategories = ['All'];
   late List<String> _categories;
+  Map<String, List<String>> _subcatsByCategory = {};
+  Map<String, String> _titleToFilter = {}; // maps display title to filter value
+  Map<String, String> _filterToTitle = {}; // reverse map: filter -> title
 
   @override
   void initState() {
@@ -51,13 +53,15 @@ class _FreshMarketScreenState extends State<FreshMarketScreen> {
       } else {
         // Subcategory context: select that subcategory
         _pageTitle = widget.initialCategoryTitle ?? widget.initialFilter!;
-        if (!_categories.contains(widget.initialFilter)) {
-          _categories.insert(1, widget.initialFilter!);
+        // Use provided parent category to load the right subcategories
+        if (widget.initialCategoryTitle != null && widget.initialCategoryTitle!.isNotEmpty) {
+          _contextCategory = widget.initialCategoryTitle;
         }
         _selectedCategory = widget.initialFilter!;
       }
     }
     _dataFuture = _loadData();
+    _loadCategoriesFromProvider();
     _searchController.addListener(_applyFilters);
   }
 
@@ -70,8 +74,62 @@ class _FreshMarketScreenState extends State<FreshMarketScreen> {
     _allProducts = results[0] as List<Product>;
     _allShops = results[1] as List<Shop>;
     _shopById = {for (final s in _allShops) s.id.toString(): s};
+    // Ensure product-shop linkage: keep only products whose shop exists
+    _allProducts = _allProducts.where((p) => _shopById.containsKey(p.shopId)).toList();
     _applyFilters();
     return _filteredData;
+  }
+
+  Future<void> _loadCategoriesFromProvider() async {
+    final raw = await DataProvider().getCategories();
+    // Build subcats per category name and title->filter mapping
+    final map = <String, List<String>>{};
+    final titleMap = <String, String>{};
+    final filterMap = <String, String>{};
+    raw.forEach((cat, subs) {
+      final titles = <String>[];
+      for (final sub in subs) {
+        final title = sub['title'] ?? '';
+        final filter = sub['filter'] ?? '';
+        if (title.isNotEmpty && filter.isNotEmpty) {
+          titles.add(title);
+          titleMap[title] = filter;
+          filterMap[filter] = title;
+        }
+      }
+      map[cat] = titles;
+    });
+    if (!mounted) return;
+    setState(() {
+      _subcatsByCategory = map;
+      _titleToFilter = titleMap;
+      _filterToTitle = filterMap;
+      // Build chips based on context category
+      if (_contextCategory != null && _subcatsByCategory.containsKey(_contextCategory)) {
+        // Show subcategories for the selected main category
+        _categories = ['All', ..._subcatsByCategory[_contextCategory!]!];
+      } else {
+        // No context or coming from subcategory - show all subcategories from first category
+        if (_subcatsByCategory.isNotEmpty) {
+          final first = _subcatsByCategory.keys.first;
+          _categories = ['All', ..._subcatsByCategory[first]!];
+        }
+      }
+
+      // If opened via subcategory (filter value), select its display title chip
+      if (widget.initialFilter != null && widget.initialIsCategory != true) {
+        final title = _filterToTitle[widget.initialFilter!];
+        if (title != null && title.isNotEmpty) {
+          _selectedCategory = title;
+          if (!_categories.contains(title)) {
+            _categories = ['All', ..._categories.where((c) => c != 'All'), title];
+          }
+        }
+      }
+      print('DEBUG: Context category: $_contextCategory');
+      print('DEBUG: Categories chips: $_categories');
+      print('DEBUG: Title to filter map: $_titleToFilter');
+    });
   }
 
   void _applyFilters() {
@@ -90,7 +148,16 @@ class _FreshMarketScreenState extends State<FreshMarketScreen> {
       _filteredData = tempShops;
     } else {
       // Show products
-      List<Product> tempProducts = _allProducts.where((p) => p.category == _selectedCategory).toList();
+      // Map selected title to filter value
+      final filterValue = _titleToFilter[_selectedCategory] ?? _selectedCategory;
+      print('DEBUG: Selected category: $_selectedCategory, Filter value: $filterValue');
+      List<Product> tempProducts = _allProducts.where((p) => p.category == filterValue).toList();
+      print('DEBUG: Products matching filter "$filterValue": ${tempProducts.length}');
+      // If we have a context category, ensure products belong to shops tagged with that category
+      if (_contextCategory != null) {
+        tempProducts = tempProducts.where((p) => _shopById[p.shopId]?.categories.contains(_contextCategory) == true).toList();
+        print('DEBUG: After context category filter "$_contextCategory": ${tempProducts.length}');
+      }
       if (query.isNotEmpty) {
         tempProducts = tempProducts.where((p) => p.name.toLowerCase().contains(query)).toList();
       }

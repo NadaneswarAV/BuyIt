@@ -252,6 +252,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/storage_service.dart';
 import 'main_navigation.dart';
+import '../data/data_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -291,6 +292,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadAvatar();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final data = await DataProvider().getProfile();
+      if (!mounted) return;
+      setState(() {
+        _nameController.text = (data['name'] ?? _nameController.text).toString();
+        _emailController.text = (data['email'] ?? _emailController.text).toString();
+        _phoneController.text = (data['phone'] ?? _phoneController.text).toString();
+        _dobController.text = (data['dob'] ?? _dobController.text).toString();
+        _streetController.text = (data['street'] ?? _streetController.text).toString();
+        _cityController.text = (data['city'] ?? _cityController.text).toString();
+        _zipController.text = (data['zip'] ?? _zipController.text).toString();
+        // Only use JSON avatar if no user-picked image exists
+        if (_profileImagePath == null || _profileImagePath!.isEmpty) {
+          if (data['avatar'] is String && (data['avatar'] as String).isNotEmpty) {
+            _profileImagePath = data['avatar'];
+          }
+        }
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadAvatar() async {

@@ -382,7 +382,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> with WidgetsBinding
       final Shop found = shops.firstWhere(
         (s) => s.name.toLowerCase() == storeName.toLowerCase(),
         orElse: () => Shop(
-          id: 0,
+          id: '0',
           name: storeName,
           description: 'Shop',
           location: 'Unknown',

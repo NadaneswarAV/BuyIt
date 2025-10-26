@@ -1,4 +1,4 @@
-name: buy_it
+name: BuyIt
 description: A starter for the Shoppe eCommerce UI
 publish_to: 'none'
 version: 0.0.1
@@ -25,6 +25,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -32,3 +33,13 @@ flutter:
     - assets/temp/
     - assets/data/
     - assets/images/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path_android: assets/images/logo_adaptive_foreground.png
+  image_path_ios: assets/images/logo_ios.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/images/logo_adaptive_foreground.png
+  remove_alpha_ios: true
+  min_sdk_android: 21

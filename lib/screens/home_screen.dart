@@ -31,6 +31,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Map<String, List<Map<String, String>>> _categoryMap = {};
   String? _avatarPath; // from profile
 
+  final Map<String, IconData> _categoryIcons = {
+    'Grocery': Icons.local_grocery_store,
+    'Snacks & Drinks': Icons.local_cafe,
+    'Beauty & Personal Care': Icons.brush,
+    'Household Essentials': Icons.home_outlined,
+  };
+
+  final Map<String, MaterialColor> _categoryBaseColors = {
+    'Grocery': Colors.green,
+    'Snacks & Drinks': Colors.orange,
+    'Beauty & Personal Care': Colors.pink,
+    'Household Essentials': Colors.blue,
+  };
+
+  Color _categoryBg(String title) {
+    final c = _categoryBaseColors[title] ?? Colors.grey;
+    return c.shade50;
+  }
+
+  Color _categoryIconColor(String title) {
+    final c = _categoryBaseColors[title] ?? Colors.grey;
+    return c.shade700;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -472,21 +496,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: Container(
               width: 120,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _categoryBg(title),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(color: Colors.grey.shade200, blurRadius: 5, offset: const Offset(0, 2)),
                 ],
               ),
               padding: const EdgeInsets.all(12),
-              child: Center(
-                child: Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(_categoryIcons[title] ?? Icons.category, color: _categoryIconColor(title), size: 28),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ],
               ),
             ),
           );

@@ -1,0 +1,189 @@
+[
+  {
+    "id": "prod_001",
+    "shopId": "shop_001",
+    "name": "Fresh Apples",
+    "description": "Crisp, juicy red apples sourced daily from local farms.",
+    "price": 120.0,
+    "unit": "kg",
+    "category": "Fruits",
+    "image": "assets/temp/fruits.png",
+    "rating": 4.6
+  },
+  {
+    "id": "prod_002",
+    "shopId": "shop_001",
+    "name": "Organic Spinach",
+    "description": "Tender organic spinach leaves, thoroughly cleaned.",
+    "price": 60.0,
+    "unit": "bunch",
+    "category": "Organic",
+    "image": "assets/temp/restaurant.jpg",
+    "rating": 4.5
+  },
+  {
+    "id": "prod_003",
+    "shopId": "shop_001",
+    "name": "Farm Fresh Milk",
+    "description": "Pasteurized whole milk with rich, creamy taste.",
+    "price": 70.0,
+    "unit": "litre",
+    "category": "Dairy",
+    "image": "assets/temp/diary.png",
+    "rating": 4.4
+  },
+  {
+    "id": "prod_004",
+    "shopId": "shop_002",
+    "name": "Wireless Earbuds",
+    "description": "True wireless earbuds with noise cancellation and long battery life.",
+    "price": 2299.0,
+    "unit": "pack",
+    "category": "Electronics",
+    "image": "assets/temp/electronics.png",
+    "rating": 4.3
+  },
+  {
+    "id": "prod_005",
+    "shopId": "shop_002",
+    "name": "Smart LED Bulb",
+    "description": "Wi‑Fi enabled RGB LED bulb compatible with voice assistants.",
+    "price": 499.0,
+    "unit": "piece",
+    "category": "Home",
+    "image": "assets/temp/home.png",
+    "rating": 4.2
+  },
+  {
+    "id": "prod_006",
+    "shopId": "shop_003",
+    "name": "Hydrating Face Serum",
+    "description": "Lightweight serum with hyaluronic acid for daily hydration.",
+    "price": 799.0,
+    "unit": "30 ml",
+    "category": "Beauty",
+    "image": "assets/temp/beauty.png",
+    "rating": 4.7
+  },
+  {
+    "id": "prod_007",
+    "shopId": "shop_003",
+    "name": "Sunscreen SPF50",
+    "description": "Broad‑spectrum sunscreen, non‑greasy and water resistant.",
+    "price": 499.0,
+    "unit": "100 ml",
+    "category": "Skincare",
+    "image": "assets/temp/skincare.png",
+    "rating": 4.5
+  },
+  {
+    "id": "prod_008",
+    "shopId": "shop_004",
+    "name": "Vitamin C Tablets",
+    "description": "Immunity support vitamin C, 1000mg tablets.",
+    "price": 299.0,
+    "unit": "bottle",
+    "category": "Baby",
+    "image": "assets/temp/baby.png",
+    "rating": 4.4
+  },
+  {
+    "id": "prod_009",
+    "shopId": "shop_004",
+    "name": "Digital Thermometer",
+    "description": "Fast‑reading digital thermometer with fever indicator.",
+    "price": 249.0,
+    "unit": "piece",
+    "category": "Baby",
+    "image": "assets/temp/home.png",
+    "rating": 4.3
+  },
+  {
+    "id": "prod_010",
+    "shopId": "shop_005",
+    "name": "Bananas",
+    "description": "Sweet, ripe bananas perfect for snacking and smoothies.",
+    "price": 60.0,
+    "unit": "dozen",
+    "category": "Fruits",
+    "image": "assets/temp/fruits.png",
+    "rating": 4.6
+  },
+  {
+    "id": "prod_011",
+    "shopId": "shop_005",
+    "name": "Fresh Oranges",
+    "description": "Juicy oranges rich in vitamin C.",
+    "price": 110.0,
+    "unit": "kg",
+    "category": "Fruits",
+    "image": "assets/temp/fruits.png",
+    "rating": 4.5
+  },
+  {
+    "id": "prod_012",
+    "shopId": "shop_006",
+    "name": "Non‑stick Frying Pan",
+    "description": "Durable non‑stick pan for everyday cooking.",
+    "price": 999.0,
+    "unit": "piece",
+    "category": "Kitchen",
+    "image": "assets/temp/kitchen.png",
+    "rating": 4.2
+  },
+  {
+    "id": "prod_013",
+    "shopId": "shop_006",
+    "name": "Chef Knife",
+    "description": "Stainless steel 8‑inch chef knife with ergonomic handle.",
+    "price": 749.0,
+    "unit": "piece",
+    "category": "Kitchen",
+    "image": "assets/temp/kitchen.png",
+    "rating": 4.3
+  },
+  {
+    "id": "prod_014",
+    "shopId": "shop_001",
+    "name": "Organic Carrots",
+    "description": "Crunchy organic carrots, great for salads and cooking.",
+    "price": 80.0,
+    "unit": "kg",
+    "category": "Organic",
+    "image": "assets/temp/restaurant.jpg",
+    "rating": 4.4
+  },
+  {
+    "id": "prod_015",
+    "shopId": "shop_001",
+    "name": "Greek Yogurt",
+    "description": "Thick and creamy yogurt, high in protein.",
+    "price": 120.0,
+    "unit": "500 g",
+    "category": "Dairy",
+    "image": "assets/temp/diary.png",
+    "rating": 4.6
+  },
+  {
+    "id": "prod_016",
+    "shopId": "shop_005",
+    "name": "Avocado",
+    "description": "Creamy avocados perfect for toast and salads.",
+    "price": 150.0,
+    "unit": "pair",
+    "category": "Organic",
+    "image": "assets/temp/fruits.png",
+    "rating": 4.5
+  },
+  {
+    "id": "prod_017",
+    "shopId": "shop_001",
+    "name": "Free‑range Eggs",
+    "description": "Farm fresh eggs from free‑range hens.",
+    "price": 85.0,
+    "unit": "dozen",
+    "category": "Dairy",
+    "image": "assets/temp/restaurant.jpg",
+    "rating": 4.6
+  }
+]

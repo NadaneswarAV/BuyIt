@@ -1,0 +1,39 @@
+{
+  "sections": [
+    {
+      "name": "Grocery",
+      "subcategories": [
+        { "parent": "Grocery", "title": "Fruits & vegetables", "filter": "Fruits", "image": "assets/temp/fruits.png" },
+        { "parent": "Grocery", "title": "Dairy, Bread & Eggs", "filter": "Dairy", "image": "assets/temp/diary.png" },
+        { "parent": "Grocery", "title": "Grains & oil", "filter": "Organic", "image": "assets/temp/grains.png" }
+      ]
+    },
+    {
+      "name": "Snacks & Drinks",
+      "subcategories": [
+        { "parent": "Snacks & Drinks", "title": "Tea, Coffee & more", "filter": "Tea", "image": "assets/temp/tea.png" },
+        { "parent": "Snacks & Drinks", "title": "Icecreams & more", "filter": "Icecreams", "image": "assets/temp/icecreams.png" },
+        { "parent": "Snacks & Drinks", "title": "Frozen food", "filter": "Frozen", "image": "assets/temp/frozen.png" },
+        { "parent": "Snacks & Drinks", "title": "Sweets", "filter": "Sweets", "image": "assets/temp/sweets.png" }
+      ]
+    },
+    {
+      "name": "Beauty & Personal Care",
+      "subcategories": [
+        { "parent": "Beauty & Personal Care", "title": "Beauty Parlour", "filter": "Beauty", "image": "assets/temp/beauty.png" },
+        { "parent": "Beauty & Personal Care", "title": "Skincare", "filter": "Skincare", "image": "assets/temp/skincare.png" },
+        { "parent": "Beauty & Personal Care", "title": "Protein & Nutrition", "filter": "Protein", "image": "assets/temp/whey.png" },
+        { "parent": "Beauty & Personal Care", "title": "Baby Care", "filter": "Baby", "image": "assets/temp/baby.png" }
+      ]
+    },
+    {
+      "name": "Household Essentials",
+      "subcategories": [
+        { "parent": "Household Essentials", "title": "Kitchen & Dining", "filter": "Kitchen", "image": "assets/temp/kitchen.png" },
+        { "parent": "Household Essentials", "title": "Home Needs", "filter": "Home", "image": "assets/temp/home.png" },
+        { "parent": "Household Essentials", "title": "Electronics", "filter": "Electronics", "image": "assets/temp/electronics.png" },
+        { "parent": "Household Essentials", "title": "Pet Care", "filter": "Pet", "image": "assets/temp/pet.png" }
+      ]
+    }
+  ]
+}

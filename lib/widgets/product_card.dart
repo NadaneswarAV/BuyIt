@@ -29,11 +29,7 @@ class ProductCard extends StatelessWidget {
                 tag: 'product_${product.id}',
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: Image.asset(
-                    product.image,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+                  child: _ProductImage(image: product.image),
                 ),
               ),
             ),
@@ -68,6 +64,29 @@ class ProductCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProductImage extends StatelessWidget {
+  final String image;
+  const _ProductImage({required this.image});
+
+  @override
+  Widget build(BuildContext context) {
+    final isNetwork = image.startsWith('http://') || image.startsWith('https://');
+    if (isNetwork) {
+      return Image.network(
+        image,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Image.asset('assets/temp/fruits.png', fit: BoxFit.cover),
+      );
+    }
+    return Image.asset(
+      image.isNotEmpty ? image : 'assets/temp/fruits.png',
+      width: double.infinity,
+      fit: BoxFit.cover,
     );
   }
 }

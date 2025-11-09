@@ -3,7 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
-import '../services/favourites_service.dart';
+import '../apis/wishlist_api.dart';
+import '../apis/product_api.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -24,9 +25,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _loadFavState() async {
-    final fav = await FavouritesService.isItemFavouritedByProduct(widget.product.name);
-    if (!mounted) return;
-    setState(() => _isFavourited = fav);
+    try {
+      final list = await WishlistApi.allWishlist();
+      final pid = int.tryParse(widget.product.id);
+      final fav = list.any((e) {
+        final m = e as Map<String, dynamic>;
+        if ((m['wishlist_type'] ?? '') != 'product') return false;
+        final p = m['product'] as Map<String, dynamic>?;
+        if (p == null) return false;
+        if (pid != null) return p['id'] == pid;
+        return (p['name']?.toString().toLowerCase() == widget.product.name.toLowerCase());
+      });
+      if (!mounted) return;
+      setState(() => _isFavourited = fav);
+    } catch (_) {}
   }
 
   @override
@@ -46,26 +58,41 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 tooltip: _isFavourited ? 'Remove from favourites' : 'Add to favourites',
                 icon: Icon(_isFavourited ? Icons.favorite : Icons.favorite_border, color: Colors.redAccent),
                 onPressed: () async {
-                  if (_isFavourited) {
-                    await FavouritesService.removeItemByProduct(widget.product.name);
+                  try {
+                    // Resolve product id for API
+                    int? pid = int.tryParse(widget.product.id);
+                    if (pid == null) {
+                      // Fallback: search by name
+                      final results = await ProductApi.searchProducts(widget.product.name);
+                      if (results.isNotEmpty && results.first is Map<String, dynamic>) {
+                        final first = results.first as Map<String, dynamic>;
+                        pid = int.tryParse('${first['id']}');
+                      }
+                    }
+
+                    if (pid == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product id not found for wishlist')));
+                      return;
+                    }
+
+                    if (_isFavourited) {
+                      await WishlistApi.removeFromWishlist(productId: pid);
+                      if (!mounted) return;
+                      setState(() => _isFavourited = false);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Item removed from wishlist')),
+                      );
+                    } else {
+                      await WishlistApi.addToWishlist(wishlistType: 'product', productId: pid);
+                      if (!mounted) return;
+                      setState(() => _isFavourited = true);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Item added to wishlist')),
+                      );
+                    }
+                  } catch (e) {
                     if (!mounted) return;
-                    setState(() => _isFavourited = false);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Item removed from favourites')),
-                    );
-                  } else {
-                    await FavouritesService.addItem(
-                      product: widget.product.name,
-                      price: widget.product.price,
-                      unit: widget.product.unit,
-                      rating: widget.product.rating,
-                      subtitle: widget.product.description,
-                    );
-                    if (!mounted) return;
-                    setState(() => _isFavourited = true);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Item added to favourites')),
-                    );
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wishlist action failed')));
                   }
                 },
               )

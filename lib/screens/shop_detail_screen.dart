@@ -9,7 +9,8 @@ import '../providers/cart_provider.dart';
 import '../widgets/product_card.dart';
 import '../widgets/shimmer_loading.dart';
 import 'product_detail_screen.dart';
-import '../services/favourites_service.dart';
+import '../apis/shop_api.dart';
+import '../apis/wishlist_api.dart';
 
 class ShopDetailScreen extends StatefulWidget {
   final Shop shop;
@@ -32,7 +33,7 @@ class _ShopDetailScreenState extends State<ShopDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _productsFuture = DataProvider().getProducts(shopId: widget.shop.id.toString());
+    _productsFuture = _fetchShopProducts();
     _reviewsFuture = DataProvider().getReviews(widget.shop.id.toString());
     _reviewsFuture.then((reviews) => setState(() => _reviews = reviews));
     _productsFuture.then((products) {
@@ -44,10 +45,50 @@ class _ShopDetailScreenState extends State<ShopDetailScreen> {
     _loadFavouriteState();
   }
 
+  Future<List<Product>> _fetchShopProducts() async {
+    // API: /api/products/by-shop/?shop_name=<name> returns products with price & availability
+    final data = await ShopApi.getProductsByShop(shopName: widget.shop.name);
+    // Expect either a list of products or a map. Normalize to list.
+    final List<dynamic> list = data is List ? data : (data is Map && data['results'] is List ? data['results'] as List : <dynamic>[]);
+    final products = list.map<Product>((e) {
+      final m = e as Map<String, dynamic>;
+      final id = '${m['id'] ?? m['product_id'] ?? ''}';
+      final name = (m['name'] ?? m['product_name'] ?? 'Product').toString();
+      final desc = (m['description'] ?? '').toString();
+      final category = (m['category'] is Map) ? (m['category']['name']?.toString() ?? '') : (m['category']?.toString() ?? '');
+      final image = (m['image'] ?? 'assets/temp/fruits.png').toString();
+      final priceVal = m['price'];
+      final price = priceVal is num ? priceVal.toDouble() : double.tryParse('${priceVal ?? 0}') ?? 0.0;
+      return Product(
+        id: id.isEmpty ? 'prod_${DateTime.now().millisecondsSinceEpoch}' : id,
+        shopId: widget.shop.id,
+        name: name,
+        description: desc,
+        price: price,
+        unit: 'pc',
+        category: category,
+        image: image,
+        rating: 4.5,
+      );
+    }).toList();
+    return products;
+  }
+
   Future<void> _loadFavouriteState() async {
-    final fav = await FavouritesService.isShopFavouritedByName(widget.shop.name);
-    if (!mounted) return;
-    setState(() => _isFavourited = fav);
+    try {
+      final list = await WishlistApi.allWishlist();
+      final shopIdStr = widget.shop.id;
+      final shopId = int.tryParse(shopIdStr);
+      final fav = list.any((e) {
+        final m = e as Map<String, dynamic>;
+        if ((m['wishlist_type'] ?? '') != 'shop') return false;
+        final s = m['shop'] as Map<String, dynamic>?;
+        if (s == null) return false;
+        return shopId != null ? s['id'] == shopId : (s['name']?.toString().toLowerCase() == widget.shop.name.toLowerCase());
+      });
+      if (!mounted) return;
+      setState(() => _isFavourited = fav);
+    } catch (_) {}
   }
 
   void _applyProductFilters() {
@@ -96,24 +137,30 @@ class _ShopDetailScreenState extends State<ShopDetailScreen> {
               color: Colors.redAccent,
             ),
             onPressed: () async {
-              if (_isFavourited) {
-                await FavouritesService.removeShopByName(widget.shop.name);
+              final id = int.tryParse(widget.shop.id);
+              if (id == null) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shop id unavailable for wishlist')));
+                return;
+              }
+              try {
+                if (_isFavourited) {
+                  await WishlistApi.removeFromWishlist(shopId: id);
+                  if (!mounted) return;
+                  setState(() => _isFavourited = false);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Shop removed from wishlist')),
+                  );
+                } else {
+                  await WishlistApi.addToWishlist(wishlistType: 'shop', shopId: id);
+                  if (!mounted) return;
+                  setState(() => _isFavourited = true);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Shop added to wishlist')),
+                  );
+                }
+              } catch (e) {
                 if (!mounted) return;
-                setState(() => _isFavourited = false);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Shop removed from favourites')),
-                );
-              } else {
-                await FavouritesService.addShop(
-                  store: widget.shop.name,
-                  rating: widget.shop.rating,
-                  distance: '${widget.shop.distance} km',
-                );
-                if (!mounted) return;
-                setState(() => _isFavourited = true);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Shop added to favourites')),
-                );
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wishlist action failed')));
               }
             },
           ),

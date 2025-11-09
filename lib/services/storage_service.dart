@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class StorageKeys {
   static const savedLocation = 'saved_location_text';
   static const profileImagePath = 'profile_image_path';
+  static const authToken = 'auth_token';
 }
 
 class StorageService {

@@ -9,8 +9,7 @@ import '../data/data_provider.dart';
 import 'product_detail_screen.dart';
 import 'shop_detail_screen.dart';
 import '../screens/cart_screen.dart';
-import '../services/storage_service.dart';
-import '../services/favourites_service.dart';
+import '../apis/wishlist_api.dart';
 import 'main_navigation.dart';
 
 class FavouritesScreen extends StatefulWidget {
@@ -31,20 +30,17 @@ class _FavouritesScreenState extends State<FavouritesScreen> with WidgetsBinding
 
   @override
   void dispose() {
-    FavouritesService.version.removeListener(_loadFavourites);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   List<Map<String, dynamic>> favourites = [];
-  static const String _favKey = 'favourites_json';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadFavourites();
-    FavouritesService.version.addListener(_loadFavourites);
   }
 
   @override
@@ -62,27 +58,57 @@ class _FavouritesScreenState extends State<FavouritesScreen> with WidgetsBinding
   }
 
   Future<void> _loadFavourites() async {
-    final saved = await StorageService.getString(_favKey);
-    if (saved != null && saved.isNotEmpty) {
-      final List<dynamic> data = json.decode(saved);
-      setState(() => favourites = data.cast<Map<String, dynamic>>());
-      return;
+    try {
+      final list = await WishlistApi.allWishlist();
+      final mapped = list.map<Map<String, dynamic>>((e) {
+        final m = e as Map<String, dynamic>;
+        final type = (m['wishlist_type'] ?? '').toString();
+        if (type == 'shop' && m['shop'] != null) {
+          final shop = m['shop'] as Map<String, dynamic>;
+          return {
+            'type': 'shop',
+            'store': shop['name'] ?? 'Shop',
+            'rating': double.tryParse('${shop['average_rating'] ?? shop['rating'] ?? ''}') ?? 0.0,
+            'distance': '',
+            'shop_id': int.tryParse('${shop['id'] ?? ''}'),
+            'added_at': m['added_at'],
+          };
+        } else {
+          final prod = m['product'] as Map<String, dynamic>?;
+          return {
+            'type': 'item',
+            'store': '',
+            'product': prod?['name'] ?? 'Product',
+            'subtitle': (prod?['category'] is Map) ? (prod!['category']['name'] ?? '') : '',
+            'price': null, // API product schema doesn't include price here
+            'unit': 'pc',
+            'rating': 0.0,
+            'distance': '',
+            'product_id': int.tryParse('${prod?['id'] ?? ''}'),
+            'added_at': m['added_at'],
+          };
+        }
+      }).toList();
+      if (!mounted) return;
+      setState(() => favourites = mapped);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => favourites = []);
     }
-    final seed = await rootBundle.loadString('assets/data/favourites.json');
-    final List<dynamic> parsed = json.decode(seed);
-    setState(() => favourites = parsed.cast<Map<String, dynamic>>());
-    await _saveFavourites();
   }
 
-  Future<void> _saveFavourites() async {
-    await StorageService.setString(_favKey, json.encode(favourites));
-  }
-
-  void _removeFavourite(Map<String, dynamic> item) async {
-    setState(() {
-      favourites.remove(item);
-    });
-    await _saveFavourites();
+  Future<void> _removeFavourite(Map<String, dynamic> item) async {
+    try {
+      if (item['type'] == 'shop' && item['shop_id'] != null) {
+        await WishlistApi.removeFromWishlist(shopId: item['shop_id'] as int);
+      } else if (item['type'] == 'item' && item['product_id'] != null) {
+        await WishlistApi.removeFromWishlist(productId: item['product_id'] as int);
+      }
+      await _loadFavourites();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to remove from wishlist')));
+    }
   }
 
   @override
@@ -157,9 +183,13 @@ class _FavouritesScreenState extends State<FavouritesScreen> with WidgetsBinding
                     child: Row(children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: _showAddFavouriteSheet,
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add Favourite'),
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Add to wishlist from product/shop pages')),
+                            );
+                          },
+                          icon: const Icon(Icons.info_outline),
+                          label: const Text('How to add?'),
                           style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                         ),
                       ),
@@ -251,90 +281,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> with WidgetsBinding
     );
   }
 
-  void _showAddFavouriteSheet() {
-    String type = 'item';
-    final storeCtl = TextEditingController();
-    final productCtl = TextEditingController();
-    final priceCtl = TextEditingController();
-    final unitCtl = TextEditingController(text: 'kg');
-    final ratingCtl = TextEditingController(text: '4.5');
-    final distanceCtl = TextEditingController(text: '1.0 km');
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-          child: StatefulBuilder(builder: (ctx, setS) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Add to Favourites', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                  const SizedBox(height: 12),
-                  Row(children: [
-                    ChoiceChip(label: const Text('Item'), selected: type=='item', onSelected: (_) => setS(() => type='item')),
-                    const SizedBox(width: 8),
-                    ChoiceChip(label: const Text('Shop'), selected: type=='shop', onSelected: (_) => setS(() => type='shop')),
-                  ]),
-                  const SizedBox(height: 12),
-                  TextField(controller: storeCtl, decoration: const InputDecoration(labelText: 'Store name')),
-                  if (type == 'item') ...[
-                    const SizedBox(height: 8),
-                    TextField(controller: productCtl, decoration: const InputDecoration(labelText: 'Product name')),
-                    const SizedBox(height: 8),
-                    TextField(controller: priceCtl, decoration: const InputDecoration(labelText: 'Price (e.g., 5.99)'), keyboardType: TextInputType.number),
-                    const SizedBox(height: 8),
-                    TextField(controller: unitCtl, decoration: const InputDecoration(labelText: 'Unit (e.g., kg, pc)')),
-                  ],
-                  const SizedBox(height: 8),
-                  TextField(controller: ratingCtl, decoration: const InputDecoration(labelText: 'Rating (1-5)'), keyboardType: TextInputType.number),
-                  const SizedBox(height: 8),
-                  TextField(controller: distanceCtl, decoration: const InputDecoration(labelText: 'Distance (e.g., 2.3 km)')),
-                  const SizedBox(height: 16),
-                  Row(children: [
-                    Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel'))),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          final entry = <String, dynamic>{
-                            'type': type,
-                            'store': storeCtl.text.trim(),
-                            'rating': double.tryParse(ratingCtl.text) ?? 0.0,
-                            'distance': distanceCtl.text.trim(),
-                          };
-                          if (type == 'item') {
-                            entry.addAll({
-                              'product': productCtl.text.trim(),
-                              'subtitle': '',
-                              'price': double.tryParse(priceCtl.text) ?? 0.0,
-                              'unit': unitCtl.text.trim().isEmpty ? 'pc' : unitCtl.text.trim(),
-                            });
-                          }
-                          setState(() {
-                            favourites.insert(0, entry);
-                          });
-                          _saveFavourites();
-                          Navigator.pop(ctx);
-                        },
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                        child: const Text('Add'),
-                      ),
-                    ),
-                  ])
-                ],
-              ),
-            );
-          }),
-        );
-      }
-    );
-  }
+  
 
   void _addFavItemToCart(BuildContext context, Map<String, dynamic> item) {
     if (item['type'] != 'item') return;

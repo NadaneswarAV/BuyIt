@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/shop.dart';
 
 class ShopService {
-  static const String baseUrl = 'http://10.226.208.163:8000/api';
+  static const String baseUrl = 'https://buy-it-backend-sywp.onrender.com/api';
 
   static Future<List<Shop>> fetchShops() async {
     try {
